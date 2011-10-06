@@ -108,7 +108,7 @@ function changeValue(o, id, n) {
 	return doAndRespond(o, 'id=' + id + '&' + n + '=' + nv);
 }
 function doAndRespond(o, d) {
-	o.html('<img src="http://www.baanreserveren.nl/images/spinner.gif" />');
+	o.html('<img src="spinner.gif" />');
 	new Ajax('?', {
 		data : d,
 		onComplete : function(t) {

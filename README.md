@@ -10,3 +10,7 @@ Simple series / tv shows admin that manages
 ## TODO
 
 * tvdb.com API @ http://thetvdb.com/wiki/index.php/Programmers_API
+
+## Prerequisites
+
+* https://github.com/rudiedirkx/db_generic
