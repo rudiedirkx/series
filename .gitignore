@@ -1,0 +1,5 @@
+# the database
+series.sqlite3
+
+# the portal script
+index.php
