@@ -100,7 +100,7 @@ else if ( isset($_GET['watching']) ) {
 <html>
 <head>
 <title>Series</title>
-<script src="/js/mootools_1_11.js"></script>
+<script src="http://hotblocks.nl/js/mootools_1_11.js"></script>
 <script>
 function changeValue(o, id, n) {
 	var nv = prompt('New value:', o.html());
@@ -217,9 +217,9 @@ foreach ( $series AS $n => $arrShow ) {
 	echo '<td><a'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a></td>';
 	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
 	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
-	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="http://www.hotblocks.nl/misc/'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
-//	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="/images/Icons/FamFamFam/cross.png" /></a></td>';
-	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="/images/Icons/FamFamFam/arrow_right.png" /></a>' ).'</td>';
+	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
+//	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="cross.png" /></a></td>';
+	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="arrow_right.png" /></a>' ).'</td>';
 	echo '</tr>'."\n";
 }
 
