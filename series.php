@@ -1,7 +1,8 @@
 <?php
 
 require_once('./../inc/db/db_sqlite.php'); // https://github.com/rudiedirkx/db_generic
-$db = db_sqlite::open('./series.sqlite3');
+//$db = db_mysql::open('localhost', 'usagerplus', 'usager', 'tests');
+$db = db_sqlite::open('series.sqlite3');
 
 if ( !$db || !$db->connected() ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
@@ -12,19 +13,23 @@ if ( !$db->table('series') ) {
 	// create table `series`
 	echo '<pre>';
 	echo "creating table `series`...\n";
-	var_dump($db->table('series', array(
+	if ( $db->table('series', array(
 		'id' => array('pk' => true),
 		'name',
 		'next_episode',
 		'missed',
-		'active',
+		'active' => array('unsigned' => true),
 		'url',
-		'deleted',
-		'o',
-		'watching'
-	)));
-	echo "created table `series`\n";
-	echo '</pre>';
+		'deleted' => array('unsigned' => true),
+		'o' => array('unsigned' => true),
+		'watching' => array('unsigned' => true)
+	)) ) {
+		echo "-- OK\n";
+		echo '</pre>';
+	}
+	else {
+		exit('-- FAIL -- '.$db->error."\n</pre>");
+	}
 }
 
 // New show
@@ -204,7 +209,7 @@ td.icon { padding-right: 4px; padding-left: 4px; }
 <tbody class="sortable">
 <?php
 
-$series = $db->select('series', 'deleted = 0 ORDER BY active DESC'.( 0 and !isset($_GET['name']) ? ', o ASC' : '' ).', LOWER(IF(\'the \' == lower(substr(name, 1, 4)), substr(name, 5), name)) ASC');
+$series = $db->select('series', 'deleted = 0 ORDER BY active DESC'.( 0 and !isset($_GET['name']) ? ', o ASC' : '' ).', LOWER(IF(\'the \' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC');
 echo $db->error;
 foreach ( $series AS $n => $arrShow ) {
 	$show = (object)$arrShow;
