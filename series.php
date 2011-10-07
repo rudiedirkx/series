@@ -1,5 +1,7 @@
 <?php
 
+header('Content-type: text/html; charset=utf-8');
+
 define('TVDB_API_KEY', '94F0BD0D5948FE69');
 
 ## tvdb
@@ -92,6 +94,12 @@ else if ( isset($_POST['id'], $_POST['next_episode']) ) {
 else if ( isset($_POST['id'], $_POST['missed']) ) {
 	$db->update('series', "missed = '".addslashes($_POST['missed'])."'", 'id = '.(int)$_POST['id']);
 	exit(($m=$db->select_one('series', 'missed', 'id = '.(int)$_POST['id']))?$m:'?');
+}
+
+// Edit field: name
+else if ( isset($_POST['id'], $_POST['name']) ) {
+	$db->update('series', "name = '".addslashes($_POST['name'])."'", 'id = '.(int)$_POST['id']);
+	exit($db->select_one('series', 'name', 'id = '.(int)$_POST['id']));
 }
 
 // Toggle active status
@@ -202,9 +210,11 @@ else if ( isset($_GET['resetshow']) ) {
 }
 
 ?>
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8" />
 <title>Series</title>
 <style>
 body, table { font-family: Verdana; font-size: 14px; border-collapse: separate; border-spacing: 0; }
@@ -232,8 +242,8 @@ tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
 <tr class="hd" bgcolor="#bbbbbb">
 	<th></th>
 	<th><a href="?name">Name</a></th>
-	<th>Next</th>
-	<th>Missed</th>
+	<th>Nxt</th>
+	<th>Not</th>
 	<th title="Existing seasons">S</th>
 	<th colspan="2"></th>
 </tr>
