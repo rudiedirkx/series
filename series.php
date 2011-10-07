@@ -1,5 +1,21 @@
 <?php
 
+define('TVDB_API_KEY', '94F0BD0D5948FE69');
+
+## tvdb
+# get mirror
+#   http://www.thetvdb.com/api/94F0BD0D5948FE69/mirrors.xml
+# get show id
+#   http://www.thetvdb.com/api/GetSeries.php?seriesname=community
+# get show details/episodes/etc
+#   http://www.thetvdb.com/api/94F0BD0D5948FE69/series/<seriesid>/all/en.zip
+
+# 1. get server time
+# 2. http://www.thetvdb.com/api/Updates.php?type=all&time=1318015462
+# 3. store in vars[last_tvdb_update]
+# 4. get info from tvdb
+# 5. store in series.data
+
 require_once('./../inc/db/db_sqlite.php'); // https://github.com/rudiedirkx/db_generic
 //$db = db_mysql::open('localhost', 'usagerplus', 'usager', 'tests');
 $db = db_sqlite::open('series.sqlite3');
@@ -8,29 +24,29 @@ if ( !$db || !$db->connected() ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
 }
 
-// db & table exist?
-if ( !$db->table('series') ) {
-	// create table `series`
-	echo '<pre>';
-	echo "creating table `series`...\n";
-	if ( $db->table('series', array(
-		'id' => array('pk' => true),
-		'name',
-		'next_episode',
-		'missed',
-		'active' => array('unsigned' => true),
-		'url',
-		'deleted' => array('unsigned' => true),
-		'o' => array('unsigned' => true),
-		'watching' => array('unsigned' => true)
-	)) ) {
-		echo "-- OK\n";
-		echo '</pre>';
-	}
-	else {
-		exit('-- FAIL -- '.$db->error."\n</pre>");
+
+// verify db tables
+$schema = include('schema.php');
+$updates = false;
+foreach ( $schema AS $table => $columns ) {
+	if ( !$db->table($table) ) {
+		if ( !$updates ) {
+			echo '<pre>';
+			$updates = true;
+		}
+		echo "creating table `".$table."`\n";
+		if ( $db->table($table, $columns) ) {
+			echo " -- SUCCESS\n";
+		}
+		else {
+			echo " -- FAIL -- " . $db->error . "\n";
+		}
 	}
 }
+if ( $updates ) {
+	echo '</pre>';
+}
+
 
 // New show
 if ( isset($_POST['name']) ) {
@@ -100,11 +116,171 @@ else if ( isset($_GET['watching']) ) {
 	exit;
 }
 
+// Update one show
+else if ( isset($_GET['updateshow']) ) {
+	$id = (int)$_GET['updateshow'];
+
+	$show = $db->select('series', 'id = '.$id);
+	if ( $show ) {
+		$show = (object)$show[0];
+
+		if ( !$show->tvdb_series_id ) {
+			// get tvdb's series_id // simple API's rule!
+			$xml = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname='.urlencode($show->name));
+			if ( isset($xml->Series[0]) ) {
+				$Series = (array)$xml->Series[0];
+				if ( isset($Series['seriesid'], $Series['IMDB_ID']) ) {
+					// okay, this is the right one
+					$db->update('series', array(
+						'name' => $Series['SeriesName'],
+						'tvdb_series_id' => $Series['seriesid'],
+						'data' => json_encode($Series),
+					), 'id = '.$show->id);
+
+					$show->tvdb_series_id = $Series['seriesid'];
+				}
+			}
+		}
+
+		if ( $show->tvdb_series_id ) {
+			// get package with details
+			$zipfile = './tmp/show-'.$show->tvdb_series_id.'.zip';
+			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/'.TVDB_API_KEY.'/series/'.$show->tvdb_series_id.'/all/en.zip'));
+
+			// read from it
+			$zip = zip_open($zipfile);
+			while ( $entry = zip_read($zip) ) {
+				$filename = zip_entry_name($entry);
+				if ( 'en.xml' == $filename ) {
+					if ( zip_entry_open($zip, $entry) ) {
+						$xml = '';
+						while ( $data = zip_entry_read($entry) ) {
+							$xml .= $data;
+						}
+						zip_entry_close($entry);
+
+						$xml = simplexml_load_string($xml);
+						$seasons = array();
+						foreach ( $xml->Episode AS $episode ) {
+							$S = (int)$episode->Combined_season;
+							$E = (int)$episode->Combined_episodenumber;
+							if ( $S && $E ) {
+								if ( !isset($seasons[$S]) ) {
+									$seasons[$S] = $E;
+								}
+								else {
+									$seasons[$S] = max($seasons[$S], $E);
+								}
+							}
+						}
+
+						// save seasons
+						$db->delete('seasons', 'series_id = '.$show->id);
+						foreach ( $seasons AS $S => $E ) {
+							$db->insert('seasons', array(
+								'series_id' => $show->id,
+								'season' => $S,
+								'episodes' => $E,
+							));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	header('Location: ./');
+	exit;
+}
+
+// reset one show
+else if ( isset($_GET['resetshow']) ) {
+	$db->delete('seasons', 'series_id = '.(int)$_GET['resetshow']);
+
+	header('Location: ./');
+	exit;
+}
+
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 <title>Series</title>
+<style>
+body, table { font-family: Verdana; font-size: 14px; border-collapse: separate; border-spacing: 0; }
+table { border: solid 1px #000; }
+table.loading { opacity: 0.5; }
+tbody tr:nth-child(odd) { background-color: #eee; }
+tbody tr:nth-child(even) { background-color: #ddd; }
+tbody tr.hilited td { background-color: lightblue; }
+td, th { border: solid 1px #fff; }
+a { text-decoration: none; }
+a[href] { text-decoration: underline; }
+td.oc a { display: block; text-decoration: none; color: black; }
+td.oc a:hover { background-color: #ccc; }
+td.oc a.eligable, td.oc a.eligable:hover { background-color: #faa; }
+tr.hd th { padding: 4px; }
+tr.watching td { font-weight: bold; }
+td.icon { padding-right: 4px; padding-left: 4px; }
+tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
+</style>
+</head>
+
+<body>
+<table id="series">
+<thead>
+<tr class="hd" bgcolor="#bbbbbb">
+	<th></th>
+	<th><a href="?name">Name</a></th>
+	<th>Next</th>
+	<th>Missed</th>
+	<th title="Existing seasons">S</th>
+	<th colspan="2"></th>
+</tr>
+</thead>
+<tbody class="sortable">
+<?php
+
+$series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
+echo $db->error;
+foreach ( $series AS $n => $arrShow ) {
+	$show = (object)$arrShow;
+
+	$classes = array();
+	$show->active && $classes[] = 'active';
+	$show->watching && $classes[] = 'watching';
+
+	$show->tvdb_series_id && $classes[] = 'with-tvdb';
+
+	echo '<tr class="'.implode(' ', $classes).'" showid="'.$show->id.'">'."\n\t";
+	echo '<td class="tvdb"><a href="?updateshow='.$show->id.'"><img src="tv.png" /></a></td>'."\n";
+	echo '<td><a'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a></td>';
+	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
+	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
+	echo '<td align=center>'.( $show->num_seasons ? '<a href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
+	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
+//	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="cross.png" /></a></td>';
+	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="arrow_right.png" /></a>' ).'</td>';
+	echo '</tr>'."\n";
+}
+
+?>
+</tbody>
+</table>
+
+<br />
+
+<form method="post">
+	<fieldset style="display: inline-block;">
+		<legend>Add show <?=count($series)+1?></legend>
+		<p>Name: <input type="text" name="name" /></p>
+		<p><input type="submit" value="Save" /><p>
+	</fieldset>
+</form>
+
+<br />
+<br />
+
 <script src="http://hotblocks.nl/js/mootools_1_11.js"></script>
 <script>
 function changeValue(o, id, n) {
@@ -177,73 +353,6 @@ $(function() {
 	saveOrder(1);
 });
 </script>
-<style>
-body, table { font-family: Verdana; font-size: 14px; border-collapse: separate; border-spacing: 0; }
-table { border: solid 1px #000; }
-table.loading { opacity: 0.5; }
-tbody tr:nth-child(odd) { background-color: #eee; }
-tbody tr:nth-child(even) { background-color: #ddd; }
-tbody tr.hilited td { background-color: lightblue; }
-td, th { border: solid 1px #fff; }
-a { text-decoration: none; }
-a[href] { text-decoration: underline; }
-td.oc a { display: block; text-decoration: none; color: black; }
-td.oc a:hover { background-color: #ccc; }
-td.oc a.eligable, td.oc a.eligable:hover { background-color: #faa; }
-tr.hd th { padding: 4px; }
-tr.watching td { font-weight: bold; }
-td.icon { padding-right: 4px; padding-left: 4px; }
-</style>
-</head>
-
-<body>
-<table id="series">
-<thead>
-<tr class="hd" bgcolor="#bbbbbb">
-	<th><a href="?name">Name</a></th>
-	<th>Next</th>
-	<th>Missed</th>
-	<th colspan="2"></th>
-</tr>
-</thead>
-<tbody class="sortable">
-<?php
-
-$series = $db->select('series', 'deleted = 0 ORDER BY active DESC'.( 0 and !isset($_GET['name']) ? ', o ASC' : '' ).', LOWER(IF(\'the \' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC');
-echo $db->error;
-foreach ( $series AS $n => $arrShow ) {
-	$show = (object)$arrShow;
-
-	$classes = array();
-	$show->active && $classes[] = 'active';
-	$show->watching && $classes[] = 'watching';
-
-	echo '<tr class="'.implode(' ', $classes).'" showid="'.$show->id.'">'."\n\t";
-	echo '<td><a'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a></td>';
-	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
-	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
-	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
-//	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="cross.png" /></a></td>';
-	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="arrow_right.png" /></a>' ).'</td>';
-	echo '</tr>'."\n";
-}
-
-?>
-</tbody>
-</table>
-
-<br />
-
-<form method="post">
-<fieldset style="display:inline-block;">
-<legend>Add show <?=count($series)+1?></legend>
-Name: <input type="text" name="name" /><br />
-<input type="submit" value="Save" />
-</fieldset>
-</form>
-
-<br />
-<br />
 </body>
 
 </html>
