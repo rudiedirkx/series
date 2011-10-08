@@ -19,8 +19,8 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 # 5. store in series.data
 
 require_once('./../inc/db/db_sqlite.php'); // https://github.com/rudiedirkx/db_generic
-//$db = db_mysql::open('localhost', 'usagerplus', 'usager', 'tests');
-$db = db_sqlite::open('series.sqlite3');
+//$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
+$db = db_sqlite::open(array('database' => 'series.sqlite3'));
 
 if ( !$db || !$db->connected() ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
@@ -50,14 +50,22 @@ if ( $updates ) {
 }
 
 
+
+/* test *
+
+print_r($db->fetch_by_field('SELECT * FROM series WHERE id > 100', 'next_episode'));
+
+exit;
+
+/* test */
+
+
+
 // New show
-if ( isset($_POST['name']) ) {
-	$_POST['deleted'] = 0;
-	$_POST['active'] = 1;
-	$_POST['o'] = 0;
+if ( isset($_POST['name']) && !isset($_POST['id']) ) {
+	$db->insert('series', array('name' => $_POST['name']));
+
 	header('Location: ./');
-	var_dump($db->insert('series', $_POST));
-	echo $db->error;
 	exit;
 }
 
@@ -65,9 +73,10 @@ if ( isset($_POST['name']) ) {
 else if ( isset($_POST['order']) ) {
 	$db->begin();
 	foreach ( explode(',', $_POST['order']) AS $i => $id ) {
-		$db->update('series', 'o = '.(int)$i, 'id = '.(int)$id);
+		$db->update('series', array('o' => $i), array('id' => $id));
 	}
 	$db->commit();
+
 	exit('OK');
 }
 
@@ -79,39 +88,39 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 		if ( $_POST['dir'] < 0 ) $minor--;
 		else $minor++;
 		$ne = $major . '.' . ( 10 > $minor ? '0' : '' ) . $minor;
-		$db->update('series', "next_episode = '".$ne."'", 'id = '.(int)$_POST['id']);
+		$db->update('series', array('next_episode' => $ne), array('id' => $_POST['id']));
 	}
-	exit($db->select_one('series', 'next_episode', 'id = '.(int)$_POST['id']));
+	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
 }
 
 // Edit field: next
 else if ( isset($_POST['id'], $_POST['next_episode']) ) {
-	$db->update('series', "next_episode = '".addslashes($_POST['next_episode'])."'", 'id = '.(int)$_POST['id']);
-	exit($db->select_one('series', 'next_episode', 'id = '.(int)$_POST['id']));
+	$db->update('series', array('next_episode' => $_POST['next_episode']), array('id' => $_POST['id']));
+	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
 }
 
 // Edit field: missed
 else if ( isset($_POST['id'], $_POST['missed']) ) {
-	$db->update('series', "missed = '".addslashes($_POST['missed'])."'", 'id = '.(int)$_POST['id']);
-	exit(($m=$db->select_one('series', 'missed', 'id = '.(int)$_POST['id']))?$m:'?');
+	$db->update('series', array('missed' => $_POST['missed']), array('id' => $_POST['id']));
+	exit($db->select_one('series', 'missed', array('id' => $_POST['id'])));
 }
 
 // Edit field: name
 else if ( isset($_POST['id'], $_POST['name']) ) {
-	$db->update('series', "name = '".addslashes($_POST['name'])."'", 'id = '.(int)$_POST['id']);
-	exit($db->select_one('series', 'name', 'id = '.(int)$_POST['id']));
+	$db->update('series', array('name' => $_POST['name']), array('id' => $_POST['id']));
+	exit($db->select_one('series', 'name', array('id' => $_POST['id'])));
 }
 
 // Toggle active status
 else if ( isset($_GET['id'], $_GET['active']) ) {
-	$db->update('series', "active = ".(int)(bool)$_GET['active'], 'id = '.(int)$_GET['id']);
+	$db->update('series', array('active' => (bool)$_GET['active']), array('id' => $_GET['id']));
 	header('Location: ./');
 	exit;
 }
 
 // Delete show
 else if ( isset($_GET['delete']) ) {
-	$db->update('series', 'deleted = 1', 'id = '.(int)$_GET['delete']);
+	$db->update('series', 'deleted = 1', array('id' => $_GET['id']));
 	header('Location: ./');
 	exit;
 }
@@ -119,7 +128,7 @@ else if ( isset($_GET['delete']) ) {
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
 	$db->update('series', 'watching = 0', '1');
-	$db->update('series', 'watching = 1', 'id = '.(int)$_GET['watching']);
+	$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
 	header('Location: ./');
 	exit;
 }
@@ -128,10 +137,7 @@ else if ( isset($_GET['watching']) ) {
 else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
-	$show = $db->select('series', 'id = '.$id);
-	if ( $show ) {
-		$show = (object)$show[0];
-
+	if ( $show = $db->select('series', 'id = ?', array($id), true) ) {
 		if ( !$show->tvdb_series_id ) {
 			// get tvdb's series_id // simple API's rule!
 			$xml = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname='.urlencode($show->name));
@@ -143,7 +149,7 @@ else if ( isset($_GET['updateshow']) ) {
 						'name' => $Series['SeriesName'],
 						'tvdb_series_id' => $Series['seriesid'],
 						'data' => json_encode($Series),
-					), 'id = '.$show->id);
+					), 'id = ?', array($show->id));
 
 					$show->tvdb_series_id = $Series['seriesid'];
 				}
@@ -183,7 +189,7 @@ else if ( isset($_GET['updateshow']) ) {
 						}
 
 						// save seasons
-						$db->delete('seasons', 'series_id = '.$show->id);
+						$db->delete('seasons', 'series_id = ?', array($show->id));
 						foreach ( $seasons AS $S => $E ) {
 							$db->insert('seasons', array(
 								'series_id' => $show->id,
@@ -203,7 +209,7 @@ else if ( isset($_GET['updateshow']) ) {
 
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
-	$db->delete('seasons', 'series_id = '.(int)$_GET['resetshow']);
+	$db->delete('seasons', 'series_id = ?', array($_GET['resetshow']));
 
 	header('Location: ./');
 	exit;
@@ -253,9 +259,7 @@ tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
 
 $series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
 echo $db->error;
-foreach ( $series AS $n => $arrShow ) {
-	$show = (object)$arrShow;
-
+foreach ( $series AS $n => $show ) {
 	$classes = array();
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
@@ -264,7 +268,7 @@ foreach ( $series AS $n => $arrShow ) {
 
 	echo '<tr class="'.implode(' ', $classes).'" showid="'.$show->id.'">'."\n\t";
 	echo '<td class="tvdb"><a href="?updateshow='.$show->id.'"><img src="tv.png" /></a></td>'."\n";
-	echo '<td><a'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a></td>';
+	echo '<td><a id="show-name-'.$show->id.'"'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild,'.$show->id.',\'name\');">e</a>)</td>';
 	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
 	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
 	echo '<td align=center>'.( $show->num_seasons ? '<a href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
@@ -293,9 +297,24 @@ foreach ( $series AS $n => $arrShow ) {
 
 <script src="http://hotblocks.nl/js/mootools_1_11.js"></script>
 <script>
-function changeValue(o, id, n) {
-	var nv = prompt('New value:', o.html());
-	if ( null === nv ) { return false; }
+function changeName(id, name) {
+	new Ajax('?', {
+		data : 'id='+id+'&name='+encodeURIComponent(name),
+		onComplete : function(t) {
+			$('show-name-'+id).html(t)
+		}
+	}).request();
+	return false;
+}
+function changeValue(o, id, n, v) {
+	v == undefined && (v = o.html())
+	var nv = prompt('New value:', v);
+	if ( null === nv ) {
+		return false;
+	}
+	if ( 'name' == n ) {
+		return changeName(id, nv);
+	}
 	return doAndRespond(o, 'id=' + id + '&' + n + '=' + nv);
 }
 function doAndRespond(o, d) {
