@@ -30,9 +30,27 @@ if ( !$db ) {
 
 
 /**
-var_dump($db->select_by_field('series', 'id', 'id > ?', array(150)));
-echo $db->error();
-exit;
+echo '<pre>';
+$success = $db->transaction(function($db) {
+	echo "one `series` object:\n";
+	var_dump($db->select('series', array('id' => '45'), null, true));
+	echo "delete with 0 affected:\n";
+	var_dump($db->delete('seasons', 'series_id = ?', 2346));
+	echo "update with bogus columns:\n";
+	var_dump($db->update('oele', array('a' => true, 'b' => false, 'c' => null), 'x = 4'));
+	echo "select by field > 150:\n";
+	var_dump($db->select_by_field('series', 'id', 'id > ?', array(150)));
+	echo $db->error();
+}, $context);
+if ( $success ) {
+	echo "\n -- SUCCESS -- result:\n";
+	var_dump($context['result']);
+}
+else {
+	echo "\n -- FAIL -- exception:\n";
+	var_dump($context['exception']);
+}
+exit('</pre>');
 /**/
 
 
@@ -83,37 +101,42 @@ else if ( isset($_POST['order']) ) {
 // Edit scrollable field: next
 else if ( isset($_POST['id'], $_POST['dir']) ) {
 	if ( 0 != (int)$_POST['dir'] ) {
-		$ne = $db->select_one('series', 'next_episode', 'id = '.(int)$_POST['id']);
+		$ne = $db->select_one('series', 'next_episode', array('id' => $_POST['id']));
 		list($major, $minor) = explode('.', $ne);
 		if ( $_POST['dir'] < 0 ) $minor--;
 		else $minor++;
 		$ne = $major . '.' . ( 10 > $minor ? '0' : '' ) . $minor;
 		$db->update('series', array('next_episode' => $ne), array('id' => $_POST['id']));
 	}
+
 	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
 }
 
 // Edit field: next
 else if ( isset($_POST['id'], $_POST['next_episode']) ) {
 	$db->update('series', array('next_episode' => $_POST['next_episode']), array('id' => $_POST['id']));
+
 	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
 }
 
 // Edit field: missed
 else if ( isset($_POST['id'], $_POST['missed']) ) {
 	$db->update('series', array('missed' => $_POST['missed']), array('id' => $_POST['id']));
+
 	exit($db->select_one('series', 'missed', array('id' => $_POST['id'])));
 }
 
 // Edit field: name
 else if ( isset($_POST['id'], $_POST['name']) ) {
 	$db->update('series', array('name' => $_POST['name']), array('id' => $_POST['id']));
+
 	exit($db->select_one('series', 'name', array('id' => $_POST['id'])));
 }
 
 // Toggle active status
 else if ( isset($_GET['id'], $_GET['active']) ) {
 	$db->update('series', array('active' => (bool)$_GET['active']), array('id' => $_GET['id']));
+
 	header('Location: ./');
 	exit;
 }
@@ -121,14 +144,16 @@ else if ( isset($_GET['id'], $_GET['active']) ) {
 // Delete show
 else if ( isset($_GET['delete']) ) {
 	$db->update('series', 'deleted = 1', array('id' => $_GET['id']));
+
 	header('Location: ./');
 	exit;
 }
 
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
-	$db->update('series', 'watching = 0', '1');
+	$db->update('series', 'watching = 0', '1'); // all of them
 	$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
+
 	header('Location: ./');
 	exit;
 }
@@ -137,7 +162,7 @@ else if ( isset($_GET['watching']) ) {
 else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
-	if ( $show = $db->select('series', 'id = ?', array($id), true) ) {
+	if ( $show = $db->select('series', array('id' => $id), null, true) ) {
 		if ( !$show->tvdb_series_id ) {
 			// get tvdb's series_id // simple API's rule!
 			$xml = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname='.urlencode($show->name));
@@ -149,7 +174,7 @@ else if ( isset($_GET['updateshow']) ) {
 						'name' => $Series['SeriesName'],
 						'tvdb_series_id' => $Series['seriesid'],
 						'data' => json_encode($Series),
-					), 'id = ?', array($show->id));
+					), array('id' => $id));
 
 					$show->tvdb_series_id = $Series['seriesid'];
 				}
@@ -189,7 +214,7 @@ else if ( isset($_GET['updateshow']) ) {
 						}
 
 						// save seasons
-						$db->delete('seasons', 'series_id = ?', array($show->id));
+						$db->delete('seasons', array('series_id' => $show->id));
 						foreach ( $seasons AS $S => $E ) {
 							$db->insert('seasons', array(
 								'series_id' => $show->id,
@@ -209,7 +234,7 @@ else if ( isset($_GET['updateshow']) ) {
 
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
-	$db->delete('seasons', 'series_id = ?', array($_GET['resetshow']));
+	$db->delete('seasons', array('series_id' => $_GET['resetshow']));
 
 	header('Location: ./');
 	exit;
