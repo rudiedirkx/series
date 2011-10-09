@@ -21,7 +21,7 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 
 require_once('./../inc/db/db_sqlite.php'); // https://github.com/rudiedirkx/db_generic
 //$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
-$db = db_sqlite::open(array('database' => 'series.sqlite3', 'exceptions' => false));
+$db = db_sqlite::open(array('database' => 'series.sqlite3', 'exceptions' => true));
 
 if ( !$db ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
