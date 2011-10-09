@@ -234,7 +234,11 @@ else if ( isset($_GET['updateshow']) ) {
 
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
+	// delete seasons/episodes
 	$db->delete('seasons', array('series_id' => $_GET['resetshow']));
+
+	// delete tvdb series id
+	$db->update('series', array('tvdb_series_id' => 0), array('id' => $_GET['resetshow']));
 
 	header('Location: ./');
 	exit;
@@ -272,7 +276,7 @@ tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
 <thead>
 <tr class="hd" bgcolor="#bbbbbb">
 	<th></th>
-	<th><a href="?name">Name</a></th>
+	<th>Name</th>
 	<th>Nxt</th>
 	<th>Not</th>
 	<th title="Existing seasons">S</th>
@@ -282,8 +286,12 @@ tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
 <tbody class="sortable">
 <?php
 
-$series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
-echo $db->error();
+try {
+	$series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons, FLOOR(next_episode) AS current_season FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
+}
+catch ( db_exception $ex ) {
+	exit('Query error: '.$ex->getMessage()."\n");
+}
 
 foreach ( $series AS $n => $show ) {
 	$classes = array();
@@ -292,12 +300,20 @@ foreach ( $series AS $n => $show ) {
 
 	$show->tvdb_series_id && $classes[] = 'with-tvdb';
 
+	$thisSeasonsEpisodes = '';
+	if ( $show->tvdb_series_id && $show->active && $show->num_seasons ) {
+		$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => (int)$show->current_season));
+		if ( $episodes ) {
+			$thisSeasonsEpisodes = ' title="Season '.(int)$show->current_season.' has '.$episodes.' episodes"';
+		}
+	}
+
 	echo '<tr class="'.implode(' ', $classes).'" showid="'.$show->id.'">'."\n\t";
 	echo '<td class="tvdb"><a href="?updateshow='.$show->id.'"><img src="tv.png" /></a></td>'."\n";
 	echo '<td><a id="show-name-'.$show->id.'"'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild,'.$show->id.',\'name\');">e</a>)</td>';
-	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
+	echo '<td class="oc"><a'.$thisSeasonsEpisodes.' href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
 	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
-	echo '<td align=center>'.( $show->num_seasons ? '<a href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
+	echo '<td align=center>'.( $show->num_seasons ? '<a title="Click to reset seasons/episodes list" href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
 	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
 //	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="cross.png" /></a></td>';
 	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="arrow_right.png" /></a>' ).'</td>';
