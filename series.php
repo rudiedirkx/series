@@ -18,13 +18,23 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 # 4. get info from tvdb
 # 5. store in series.data
 
+
 require_once('./../inc/db/db_sqlite.php'); // https://github.com/rudiedirkx/db_generic
 //$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
-$db = db_sqlite::open(array('database' => 'series.sqlite3'));
+$db = db_sqlite::open(array('database' => 'series.sqlite3', 'exceptions' => false));
 
-if ( !$db || !$db->connected() ) {
+if ( !$db ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
 }
+
+
+
+/**
+var_dump($db->select_by_field('series', 'id', 'id > ?', array(150)));
+echo $db->error();
+exit;
+/**/
+
 
 
 // verify db tables
@@ -41,23 +51,13 @@ foreach ( $schema AS $table => $columns ) {
 			echo " -- SUCCESS\n";
 		}
 		else {
-			echo " -- FAIL -- " . $db->error . "\n";
+			echo " -- FAIL -- " . $db->error() . "\n";
 		}
 	}
 }
 if ( $updates ) {
 	echo '</pre>';
 }
-
-
-
-/* test *
-
-print_r($db->fetch_by_field('SELECT * FROM series WHERE id > 100', 'next_episode'));
-
-exit;
-
-/* test */
 
 
 
@@ -258,7 +258,8 @@ tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
 <?php
 
 $series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
-echo $db->error;
+echo $db->error();
+
 foreach ( $series AS $n => $show ) {
 	$classes = array();
 	$show->active && $classes[] = 'active';
