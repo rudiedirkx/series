@@ -19,7 +19,7 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 # 5. store in series.data
 
 
-require_once('./../inc/db/db_sqlite.php'); // https://github.com/rudiedirkx/db_generic
+require_once '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic
 //$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
 $db = db_sqlite::open(array('database' => 'series.sqlite3', 'exceptions' => true));
 
@@ -101,12 +101,42 @@ else if ( isset($_POST['order']) ) {
 // Edit scrollable field: next
 else if ( isset($_POST['id'], $_POST['dir']) ) {
 	if ( 0 != (int)$_POST['dir'] ) {
-		$ne = $db->select_one('series', 'next_episode', array('id' => $_POST['id']));
-		list($major, $minor) = explode('.', $ne);
-		if ( $_POST['dir'] < 0 ) $minor--;
-		else $minor++;
-		$ne = $major . '.' . ( 10 > $minor ? '0' : '' ) . $minor;
+		$d = $_POST['dir'] < 0 ? -1 : 1;
+
+		// fetch show
+		$show = $db->select('series', array('id' => $_POST['id']), null, true);
+		$ne = $show->next_episode;
+
+		// do +1 or -1 for smallest/last part
+		$x = array_map('intval', explode('.', $ne));
+		$i = count($x)-1;
+		$x[$i] += $d;
+
+		// end of season -> next season
+		if ( $show->tvdb_series_id ) {
+			$S = reset($x);
+			$E = end($x);
+			if ( false !== ($episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S))) ) {
+				if ( $E > $episodes ) {
+					$x = array_fill(0, count($x), 1);
+					$x[0] = $S+1; // next season
+				}
+			}
+		}
+
+		// prepend 0's
+		if ( 2 <= count($x) ) {
+			$S = array_shift($x);
+			$x = array_map(function($n) {
+				return str_pad((string)$n, 2, '0', STR_PAD_LEFT);
+			}, $x);
+			array_unshift($x, $S);
+		}
+
+		// save
+		$ne = implode('.', $x);
 		$db->update('series', array('next_episode' => $ne), array('id' => $_POST['id']));
+		exit($ne);
 	}
 
 	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
