@@ -274,6 +274,85 @@ else if ( isset($_GET['resetshow']) ) {
 	exit;
 }
 
+// parse .torrent to download subs
+else if ( isset($_FILES['torrent']) ) {
+	echo '<pre>';
+	print_r($_FILES['torrent']);
+
+	// must be a .torrent file
+	if ( preg_match('/\.torrent$/i', $_FILES['torrent']['name']) ) {
+		// must have the torrent mime type
+		if ( !isset($_FILES['torrent']['type']) || is_int(strpos($_FILES['torrent']['type'], 'torrent')) ) {
+			require_once '../tests/torrent/TorrentReader.php'; // https://github.com/rudiedirkx/Torrent-reader
+
+			// parse torrent
+			$torrent = TorrentReader::parse(file_get_contents($_FILES['torrent']['tmp_name']), $reader);
+
+			if ( $torrent ) {
+				$download = array('name' => '', 'episodes' => array());
+
+				// parse file names
+				foreach ( $torrent['info']['files'] AS $i => $file ) {
+					$filename = end($file['path']);
+
+					// get Season and Episode
+					if ( preg_match('/s(\d\d?)e(\d\d?)/i', $filename, $match) ) {
+						if ( !$download['name'] ) {
+							$download['name'] = strtr(substr($filename, 0, strpos($filename, $match[0])), array('.' => ' '));
+						}
+
+						array_shift($match);
+						list($S, $E) = array_map('intval', $match);
+
+						// get 'scene' (?)
+						if ( preg_match('/[\.\-]([^\.\-]+)\.[a-z0-9]+$/', $filename, $match) ) {
+							$scene = $match[1];
+							$download['episodes'][] = array(
+								'season' => $S,
+								'episode' => $E,
+								'scene' => $scene,
+							);
+						}
+					}
+				}
+//print_r($download);
+
+				// search for subtitles on $site
+				$site = 'http://www.podnapisi.net';
+				foreach ( $download['episodes'] AS $i => $episode ) {
+					if ( $i ) {
+						sleep(1); // any reason?
+					}
+
+echo "\n";
+print_r($episode);
+					$q = array(
+						'sK' => $download['name'],
+						'sTE' => $episode['episode'],
+						'sTS' => $episode['season'],
+						'sR' => $episode['scene'],
+						'sJ' => 2, // 2 = English
+					);
+					$url1 = $site . '/en/ppodnapisi/search?' . http_build_query($q);
+					$searchPage = file_get_contents($url1);
+					if ( preg_match('#href="(/[a-z]{2}/(?:[a-z0-9\-]+?)\-subtitles\-[a-z]\d+)"#i', $searchPage, $match) ) {
+						$url2 = $site . $match[1];
+						$downloadPage = file_get_contents($url2);
+						if ( preg_match('#href="(/[a-z]{2}/ppodnapisi/download/i/\d+/k/[a-f0-9]+)"#i', $downloadPage, $match) ) {
+							$url3 = $site . $match[1];
+//var_dump($url3);
+							echo '<a href="'.$url3.'">'.$url3.'</a>' . "\n";
+						}
+					}
+
+					flush();
+				}
+			}
+		}
+	}
+	exit;
+}
+
 ?>
 <!doctype html>
 <html>
@@ -283,6 +362,7 @@ else if ( isset($_GET['resetshow']) ) {
 <title>Series</title>
 <style>
 body, table { font-family: Verdana; font-size: 14px; border-collapse: separate; border-spacing: 0; }
+a { color: blue; }
 table { border: solid 1px #000; }
 table.loading { opacity: 0.5; }
 tbody tr:nth-child(odd) { background-color: #eee; }
@@ -298,10 +378,17 @@ tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
+
+label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
+#torrent { position: absolute; visibility: hidden; }
 </style>
 </head>
 
 <body>
+<form method=post action enctype="multipart/form-data">
+	<p><label for="torrent"><input type=file name=torrent id=torrent onchange=this.form.submit()> Upload .torrent to download subs</label></p>
+</form>
+
 <table id="series">
 <thead>
 <tr class="hd" bgcolor="#bbbbbb">
