@@ -81,7 +81,12 @@ if ( $updates ) {
 
 // New show
 if ( isset($_POST['name']) && !isset($_POST['id']) ) {
-	$db->insert('series', array('name' => $_POST['name']));
+	$db->insert('series', array(
+		'name' => $_POST['name'],
+		'deleted' => 0,
+		'active' => 1,
+		'watching' => 0,
+	));
 
 	header('Location: ./');
 	exit;
@@ -113,13 +118,23 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 		$x[$i] += $d;
 
 		// end of season -> next season
-		if ( $show->tvdb_series_id ) {
-			$S = reset($x);
-			$E = end($x);
-			if ( false !== ($episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S))) ) {
+		if ( $show->tvdb_series_id && 2 == count($x) ) {
+			$S =& $x[0];
+			$E =& $x[1];
+			$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S));
+			if ( false !== $episodes ) {
+				// next season
 				if ( $E > $episodes ) {
-					$x = array_fill(0, count($x), 1);
-					$x[0] = $S+1; // next season
+					$S++;
+					$E = 1;
+				}
+				// prev season
+				else if ( 0 >= $E ) {
+					$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S-1));
+					if ( false !== $episodes ) {
+						$S--;
+						$E = $episodes;
+					}
 				}
 			}
 		}
