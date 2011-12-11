@@ -433,10 +433,15 @@ foreach ( $series AS $n => $show ) {
 	$show->tvdb_series_id && $classes[] = 'with-tvdb';
 
 	$thisSeasonsEpisodes = '';
-	if ( $show->tvdb_series_id && $show->active && $show->num_seasons ) {
-		$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => (int)$show->current_season));
-		if ( $episodes ) {
-			$thisSeasonsEpisodes = ' title="Season '.(int)$show->current_season.' has '.$episodes.' episodes"';
+	$show->seasons = $show->num_seasons = null;
+	if ( $show->tvdb_series_id ) {
+		$show->seasons = $db->select_fields('seasons', 'season,episodes', array('series_id' => $show->id));
+		$show->num_seasons = count($show->seasons);
+		if ( $show->active && $show->seasons ) {
+			$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => (int)$show->current_season));
+			if ( $episodes ) {
+				$thisSeasonsEpisodes = ' title="Season '.(int)$show->current_season.' has '.$episodes.' episodes"';
+			}
 		}
 	}
 
@@ -445,7 +450,7 @@ foreach ( $series AS $n => $show ) {
 	echo '<td><a id="show-name-'.$show->id.'"'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild,'.$show->id.',\'name\');">e</a>)</td>';
 	echo '<td class="oc"><a'.$thisSeasonsEpisodes.' href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
 	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
-	echo '<td align=center>'.( $show->num_seasons ? '<a title="Click to reset seasons/episodes list" href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
+	echo '<td align=center>'.( $show->seasons ? '<a title="Total episodes: '.array_sum($show->seasons)."\n\n".'Click to reset seasons/episodes list" href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
 	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
 //	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="cross.png" /></a></td>';
 	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="arrow_right.png" /></a>' ).'</td>';
