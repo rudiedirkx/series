@@ -23,6 +23,10 @@ require_once '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_gene
 //$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
 $db = db_sqlite::open(array('database' => 'series.sqlite3', 'exceptions' => true));
 
+class myRecordObject {}
+
+db_generic_result::$return_object_class = 'myRecordObject';
+
 if ( !$db ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
 }
@@ -56,7 +60,7 @@ exit('</pre>');
 
 
 // verify db tables
-$schema = include('schema.php');
+$schema = require 'schema.php';
 $updates = false;
 foreach ( $schema AS $table => $columns ) {
 	if ( !$db->table($table) ) {
@@ -376,6 +380,21 @@ print_r($episode);
 <meta charset="utf-8" />
 <title>Series</title>
 <style>
+::-webkit-scrollbar {
+	background: #f7f7f7;
+	width: 30px;
+}
+::-webkit-scrollbar:hover {
+	background: #ddd;
+}
+::-webkit-scrollbar-thumb {
+	background: #aaa;
+	border-radius: 15px;
+}
+:hover ::-webkit-scrollbar-thumb {
+	background: #888;
+}
+
 body, table { font-family: Verdana; font-size: 14px; border-collapse: separate; border-spacing: 0; }
 a { color: blue; }
 table { border: solid 1px #000; }
@@ -393,7 +412,7 @@ tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
-
+img { width: 16px; height: 16px; }
 label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
 #torrent { position: absolute; visibility: hidden; }
 </style>
