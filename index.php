@@ -340,29 +340,33 @@ else if ( isset($_FILES['torrent']) ) {
 				$site = 'http://www.podnapisi.net';
 				foreach ( $download['episodes'] AS $i => $episode ) {
 					if ( $i ) {
-						sleep(1); // any reason?
+//						sleep(1); // any reason?
 					}
 
-echo "\n";
-print_r($episode);
+//echo "\n";
+//print_r($episode);
 					$q = array(
 						'sK' => $download['name'],
+						'sT' => 1, // Series, not movie
 						'sTE' => $episode['episode'],
 						'sTS' => $episode['season'],
 						'sR' => $episode['scene'],
-						'sJ' => 2, // 2 = English
+						'sJ' => 2, // English
 					);
 					$url1 = $site . '/en/ppodnapisi/search?' . http_build_query($q);
+					echo '<a href="'.$url1.'">'.$url1.'</a>' . "\n";
+/*echo $url1 . "\n";
 					$searchPage = file_get_contents($url1);
 					if ( preg_match('#href="(/[a-z]{2}/(?:[a-z0-9\-]+?)\-subtitles\-[a-z]\d+)"#i', $searchPage, $match) ) {
 						$url2 = $site . $match[1];
+echo $url2 . "\n";
 						$downloadPage = file_get_contents($url2);
 						if ( preg_match('#href="(/[a-z]{2}/ppodnapisi/download/i/\d+/k/[a-f0-9]+)"#i', $downloadPage, $match) ) {
 							$url3 = $site . $match[1];
 //var_dump($url3);
 							echo '<a href="'.$url3.'">'.$url3.'</a>' . "\n";
 						}
-					}
+					}*/
 
 					flush();
 				}
