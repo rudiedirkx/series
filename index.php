@@ -31,55 +31,9 @@ if ( !$db ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
 }
 
-
-
-/**
-echo '<pre>';
-$success = $db->transaction(function($db) {
-	echo "one `series` object:\n";
-	var_dump($db->select('series', array('id' => '45'), null, true));
-	echo "delete with 0 affected:\n";
-	var_dump($db->delete('seasons', 'series_id = ?', 2346));
-	echo "update with bogus columns:\n";
-	var_dump($db->update('oele', array('a' => true, 'b' => false, 'c' => null), 'x = 4'));
-	echo "select by field > 150:\n";
-	var_dump($db->select_by_field('series', 'id', 'id > ?', array(150)));
-	echo $db->error();
-}, $context);
-if ( $success ) {
-	echo "\n -- SUCCESS -- result:\n";
-	var_dump($context['result']);
-}
-else {
-	echo "\n -- FAIL -- exception:\n";
-	var_dump($context['exception']);
-}
-exit('</pre>');
-/**/
-
-
-
-// verify db tables
-$schema = require 'schema.php';
-$updates = false;
-foreach ( $schema AS $table => $columns ) {
-	if ( !$db->table($table) ) {
-		if ( !$updates ) {
-			echo '<pre>';
-			$updates = true;
-		}
-		echo "creating table `".$table."`\n";
-		if ( $db->table($table, $columns) ) {
-			echo " -- SUCCESS\n";
-		}
-		else {
-			echo " -- FAIL -- " . $db->error() . "\n";
-		}
-	}
-}
-if ( $updates ) {
-	echo '</pre>';
-}
+// verify db schema
+$schema = require 'db-schema.php';
+$db->schema($schema);
 
 
 
@@ -488,7 +442,7 @@ foreach ( $series AS $n => $show ) {
 
 <form method="post">
 	<fieldset style="display: inline-block;">
-		<legend>Add show <?=count($series)+1?></legend>
+		<legend>Add show <?=$n+2?></legend>
 		<p>Name: <input type="text" name="name" /></p>
 		<p><input type="submit" value="Save" /><p>
 	</fieldset>
