@@ -35,15 +35,26 @@ $db->schema($schema);
 
 // New show
 if ( isset($_POST['name']) && !isset($_POST['id']) ) {
-	$db->insert('series', array(
+	$insert = array(
 		'name' => $_POST['name'],
 		'deleted' => 0,
 		'active' => 1,
 		'watching' => 0,
-	));
+	);
 
-	header('Location: ./');
-	exit;
+	if ( !empty($_POST['dont_connect_tvdb']) || !empty($_POST['tvdb_series_id']) ) {
+		if ( !empty($_POST['tvdb_series_id']) ) {
+			$insert['tvdb_series_id'] = $_POST['tvdb_series_id'];
+		}
+
+		$db->insert('series', $insert);
+
+		header('Location: ./');
+		exit;
+	}
+	else {
+		$adding_show_tvdb_result = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($_POST['name']));
+	}
 }
 
 // Change show order
@@ -366,7 +377,7 @@ tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
-img { width: 16px; height: 16px; }
+td img { width: 16px; height: 16px; }
 label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
 #torrent { position: absolute; visibility: hidden; }
 </style>
@@ -437,11 +448,31 @@ foreach ( $series AS $n => $show ) {
 
 <br />
 
-<form method="post">
+<form id="adding-show" method="post" action="#adding-show" style="padding-top: 10px;">
 	<fieldset style="display: inline-block;">
 		<legend>Add show <?=$n+2?></legend>
-		<p>Name: <input type="text" name="name" /></p>
+		<p>Name: <input type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
+		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?=(string)@$_POST['tvdb_series_id']?>" /></p>
 		<p><input type="submit" value="Save" /><p>
+
+		<?if (@$adding_show_tvdb_result):?>
+			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
+			<div class="search-results">
+				<ul>
+					<?foreach ($adding_show_tvdb_result->Series AS $show):?>
+						<li>
+							<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
+							<!--
+								(<?=$show->banner?>)
+								<img src="http://www.thetvdb.com/banners/graphical/<?=$show->seriesid?>-g.jpg" alt="banner" />
+							-->
+							(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
+						</li>
+					<?endforeach?>
+				</ul>
+				<pre><?php //print_r($adding_show_tvdb_result); ?></pre>
+			</div>
+		<?endif?>
 	</fieldset>
 </form>
 
@@ -450,6 +481,13 @@ foreach ( $series AS $n => $show ) {
 
 <script src="http://hotblocks.nl/js/mootools_1_11.js"></script>
 <script>
+$$('a.tvdb-search-result').addEvent('click', function(e) {
+	new Event(e).stop();
+	var $this = $(this),
+		id = $this.attr('data-id');
+	$('add_tvdb_series_id').value = id;
+});
+
 function changeName(id, name) {
 	new Ajax('?', {
 		data : 'id='+id+'&name='+encodeURIComponent(name),
@@ -538,3 +576,10 @@ $(function() {
 </body>
 
 </html>
+<?php
+
+function html($str) {
+	return htmlspecialchars($str, ENT_COMPAT, 'UTF-8');
+}
+
+
