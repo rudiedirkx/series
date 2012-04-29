@@ -21,11 +21,7 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 
 require_once '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic
 //$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
-$db = db_sqlite::open(array('database' => 'series.sqlite3', 'exceptions' => true));
-
-class myRecordObject {}
-
-db_generic_result::$return_object_class = 'myRecordObject';
+$db = db_sqlite::open(array('database' => 'series.sqlite3'));
 
 if ( !$db ) {
 	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
@@ -399,9 +395,10 @@ try {
 	$series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons, FLOOR(next_episode) AS current_season FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
 }
 catch ( db_exception $ex ) {
-	exit('Query error: '.$ex->getMessage()."\n");
+	exit('Query error: ' . $ex->getMessage() . "\n");
 }
 
+$n = -1;
 foreach ( $series AS $n => $show ) {
 	$classes = array();
 	$show->active && $classes[] = 'active';

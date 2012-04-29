@@ -3,17 +3,17 @@
 return array(
 	'series' => array(
 		'id' => array('pk' => true),
-		'name',
-		'next_episode',
-		'missed',
-		'active' => array('unsigned' => true),
-		'url',
-		'deleted' => array('unsigned' => true),
+		'name' => array('null' => false),
+		'next_episode' => array('null' => false, 'default' => ''),
+		'missed' => array('null' => false, 'default' => ''),
+		'active' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 1),
+		'url' => array('null' => false, 'default' => ''),
+		'deleted' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
 		'o' => array('unsigned' => true),
-		'watching' => array('unsigned' => true),
+		'watching' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
 		'tvdb_series_id',
-		'data',
-		'uptodate' => array('unsigned' => true, 'default' => 0),
+		'data' => array('type' => 'text'),
+		'uptodate' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
 	),
 	'seasons' => array(
 		'series_id' => array('unsigned' => true),
@@ -22,7 +22,7 @@ return array(
 	),
 	'variables' => array(
 		'name',
-		'value',
+		'value' => array('type' => 'text'),
 	),
 );
 
