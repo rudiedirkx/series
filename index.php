@@ -561,7 +561,7 @@ $(function() {
 			}
 		}
 	});
-	new Sortables($$('.sortable')[0], {
+	/* new Sortables($$('.sortable')[0], {
 		ghost: false,
 		onStart: function(elmt) {
 			elmt.addClass('hilited');
@@ -570,7 +570,7 @@ $(function() {
 			saveOrder();
 		}
 	});
-	saveOrder(1);
+	saveOrder(1); */
 });
 </script>
 </body>
