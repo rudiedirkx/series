@@ -45,9 +45,19 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 	if ( !empty($_POST['dont_connect_tvdb']) || !empty($_POST['tvdb_series_id']) ) {
 		if ( !empty($_POST['tvdb_series_id']) ) {
 			$insert['tvdb_series_id'] = $_POST['tvdb_series_id'];
+
+			if ( !empty($_POST['replace_existing']) ) {
+				$existingShow = $db->select('series', array('deleted' => 0, 'name' => $insert['name']), null, true);
+				if ( $existingShow ) {
+					$db->update('series', array('tvdb_series_id' => $insert['tvdb_series_id']), array('id' => $existingShow->id));
+					$insert = false;
+				}
+			}
 		}
 
-		$db->insert('series', $insert);
+		if ( $insert ) {
+			$db->insert('series', $insert);
+		}
 
 		header('Location: ./');
 		exit;
@@ -457,6 +467,8 @@ foreach ( $series AS $n => $show ) {
 
 		<?if (@$adding_show_tvdb_result):?>
 			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
+			<p><label><input type="checkbox" name="replace_existing" /> Save The TVDB into existing show</label></p>
+
 			<div class="search-results">
 				<ul>
 					<?foreach ($adding_show_tvdb_result->Series AS $show):?>
