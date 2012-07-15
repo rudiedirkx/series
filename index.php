@@ -381,12 +381,12 @@ tbody tr.hilited td { background-color: lightblue; }
 td, th { border: solid 1px #fff; }
 a { text-decoration: none; }
 a[href] { text-decoration: underline; }
-.name a { color: red; }
-tr.active .name a { color: green; }
+.name a:first-child { color: red; }
+tr.active .name a:first-child { color: green; }
 td.seasons { text-align: center; }
 td.oc a { display: block; text-decoration: none; color: black; }
 td.oc a:hover { background-color: #ccc; }
-td.oc a.eligable, td.oc a.eligable:hover { background-color: #faa; }
+td.oc a.eligable, td.oc a.eligable:hover { background-color: #faa; color: #000; }
 td.next a, td.missed a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
@@ -495,26 +495,25 @@ foreach ( $series AS $n => $show ) {
 <br />
 <br />
 
-<script src="http://hotblocks.nl/js/mootools_1_11.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script>
-$$('a.tvdb-search-result').addEvent('click', function(e) {
-	new Event(e).stop();
+$('a.tvdb-search-result').on('click', function(e) {
+	e.preventDefault();
 	var $this = $(this),
-		id = $this.attr('data-id');
-	$('add_tvdb_series_id').value = id;
+		id = $this.data('id');
+	$('#add_tvdb_series_id').val(id);
 });
 
 function changeName(id, name) {
-	new Ajax('?', {
-		data : 'id='+id+'&name='+encodeURIComponent(name),
-		onComplete : function(t) {
-			$('show-name-'+id).html(t)
-		}
-	}).request();
+	$.post('', 'id=' + id + '&name=' + encodeURIComponent(name), function(t) {
+		$('#show-name-' + id).html(t);
+	});
 	return false;
 }
+
 function changeValue(o, id, n, v) {
-	v == undefined && (v = o.html())
+	var $o = $(o);
+	v == undefined && (v = $o.html())
 	var nv = prompt('New value:', v);
 	if ( null === nv ) {
 		return false;
@@ -524,70 +523,36 @@ function changeValue(o, id, n, v) {
 	}
 	return doAndRespond(o, 'id=' + id + '&' + n + '=' + nv);
 }
+
 function doAndRespond(o, d) {
-	o.html('<img src="spinner.gif" />');
-	new Ajax('?', {
-		data : d,
-		onComplete : function(t) {
-			o.html(t);
-		}
-	}).request();
+	var $o = $(o);
+	$o.html('<img src="spinner.gif" />');
+	$.post('', d, function(t) {
+		$o.html(t);
+	});
 	return false;
 }
-var g_order;
-function saveOrder(s) {
-	var order = $$$('tbody.sortable > tr').map(function(tr) {
-		return tr.attr('showid');
-	}).join(',');
-	if ( s || order === g_order ) {
-		$$('.hilited').removeClass('hilited');
-		g_order = order;
-		return;
-	}
 
-	// ajax start
-	$('series').addClass('loading');
-
-	new Ajax('?', {
-		data: 'order=' + order,
-		onComplete: function(t) {
-//			alert(t);
-			$$('.hilited').removeClass('hilited');
-			g_order = order;
-
-			// ajax end
-			$('series').removeClass('loading');
-		}
-	}).request();
-}
-$(function() {
-	$$('td.oc a').addEvents({
-		'contextmenu': function(e) {
-			e = new Event(e).stop();
-			e.target.addClass('eligable');
-		},
-		'mouseleave': function(e) {
-			e.target.removeClass('eligable');
-		},
-		'mousewheel': function(e) {
-			e = new Event(e);
-			if ( e.target.hasClass('eligable') && e.wheel != 0 ) {
-				e.stop();
-				doAndRespond(e.target, 'id=' + e.target.parent('tr').attr('showid') + '&dir=' + e.wheel);
-			}
+$('#series')
+	.on('contextmenu', 'td.oc a', function(e) {
+		e.preventDefault();
+		var $target = $(e.target);
+		$target.addClass('eligable');
+	})
+	.on('mouseleave', 'td.oc a', function(e) {
+		var $target = $(e.target);
+		$target.removeClass('eligable');
+	})
+	.on('mousewheel DOMMouseScroll', 'td.oc a', function(e) {
+		var $this = $(this),
+			$target = $(e.target),
+			direction = 'number' == typeof e.originalEvent.wheelDelta ? -e.originalEvent.wheelDelta : e.originalEvent.detail;
+		if ( $target.hasClass('eligable') && direction ) {
+			e.preventDefault();
+			direction /= -Math.abs(direction);
+			doAndRespond($target, 'id=' + $target.closest('tr').attr('showid') + '&dir=' + direction);
 		}
 	});
-	/* new Sortables($$('.sortable')[0], {
-		ghost: false,
-		onStart: function(elmt) {
-			elmt.addClass('hilited');
-		},
-		onComplete: function(elmt) {
-			saveOrder();
-		}
-	});
-	saveOrder(1); */
-});
 </script>
 </body>
 
