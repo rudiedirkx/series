@@ -536,21 +536,24 @@ function doAndRespond(o, d) {
 $('#series')
 	.on('contextmenu', 'td.oc a', function(e) {
 		e.preventDefault();
-		var $target = $(e.target);
-		$target.addClass('eligable');
+		var $this = $(this);
+		$this.addClass('eligable');
 	})
 	.on('mouseleave', 'td.oc a', function(e) {
-		var $target = $(e.target);
-		$target.removeClass('eligable');
+		var $this = $(this);
+		$this.removeClass('eligable');
 	})
 	.on('mousewheel DOMMouseScroll', 'td.oc a', function(e) {
 		var $this = $(this),
-			$target = $(e.target),
 			direction = 'number' == typeof e.originalEvent.wheelDelta ? -e.originalEvent.wheelDelta : e.originalEvent.detail;
-		if ( $target.hasClass('eligable') && direction ) {
+		// Firefox messes up here... It doesn't cancel the scroll event. If I move
+		// the preventDefault to the top of this function, sometimes it does cancel
+		// the event (and sometimes it doesn't!?). Very strange behaviour that I can't
+		// seem to reproduce in http://jsfiddle.net/rudiedirkx/dDW63/show/ (always works).
+		if ( $this.hasClass('eligable') && direction ) {
 			e.preventDefault();
 			direction /= -Math.abs(direction);
-			doAndRespond($target, 'id=' + $target.closest('tr').attr('showid') + '&dir=' + direction);
+			doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
 		}
 	});
 </script>
