@@ -351,8 +351,9 @@ echo $url2 . "\n";
 <!doctype html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta charset="utf-8" />
+<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Series</title>
 <style>
 ::-webkit-scrollbar {
@@ -370,7 +371,7 @@ echo $url2 . "\n";
 	background: #888;
 }
 
-body, table { font-family: Verdana; font-size: 14px; border-collapse: separate; border-spacing: 0; }
+body, table { font-family: Verdana, Arial, sans-serif; font-size: 14px; border-collapse: separate; border-spacing: 0; }
 a { color: blue; }
 table { border: solid 1px #000; }
 table.loading { opacity: 0.5; }
@@ -380,14 +381,18 @@ tbody tr.hilited td { background-color: lightblue; }
 td, th { border: solid 1px #fff; }
 a { text-decoration: none; }
 a[href] { text-decoration: underline; }
+.name a { color: red; }
+tr.active .name a { color: green; }
+td.seasons { text-align: center; }
 td.oc a { display: block; text-decoration: none; color: black; }
 td.oc a:hover { background-color: #ccc; }
 td.oc a.eligable, td.oc a.eligable:hover { background-color: #faa; }
+td.next a, td.missed a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
-td img { width: 16px; height: 16px; }
+td img { width: 16px; height: 16px; display: block; }
 label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
 #torrent { position: absolute; visibility: hidden; }
 </style>
@@ -440,16 +445,15 @@ foreach ( $series AS $n => $show ) {
 		}
 	}
 
-	echo '<tr class="'.implode(' ', $classes).'" showid="'.$show->id.'">'."\n\t";
-	echo '<td class="tvdb"><a href="?updateshow='.$show->id.'"><img src="tv.png" /></a></td>'."\n";
-	echo '<td><a id="show-name-'.$show->id.'"'.( $show->url ? ' href="'.$show->url.'"' : '' ).' style="color:'.( '1' === $show->active ? 'green' : 'red' ).';">'.$show->name.'</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild,'.$show->id.',\'name\');">e</a>)</td>';
-	echo '<td class="oc"><a'.$thisSeasonsEpisodes.' href="#" onclick="return changeValue(this,'.$show->id.',\'next_episode\');">'.( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ).'</a></td>';
-	echo '<td class="oc"><a href="#" onclick="return changeValue(this,'.$show->id.',\'missed\');">'.( trim($show->missed) ? trim($show->missed) : '&nbsp;' ).'</a></td>';
-	echo '<td align=center>'.( $show->seasons ? '<a title="Total episodes: '.array_sum($show->seasons)."\n\n".'Click to reset seasons/episodes list" href="?resetshow='.$show->id.'" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">'.$show->num_seasons.'</a>' : '' ).'</td>';
-	echo '<td class="icon"><a href="?id='.$show->id.'&active='.( $show->active ? '0' : '1' ).'"><img style="border:0;" src="'.( $show->active ? 'yes' : 'no' ).'.gif" /></a></td>';
-//	echo '<td class="icon"><a href="?delete='.$show->id.'"><img style="border:0;" src="cross.png" /></a></td>';
-	echo '<td class="icon">'.( $show->watching ? '' : '<a href="?watching='.$show->id.'"><img src="arrow_right.png" /></a>' ).'</td>';
-	echo '</tr>'."\n";
+	echo '<tr class="' . implode(' ', $classes) . '" showid="' . $show->id . '">' . "\n";
+	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
+	echo "\t" . '<td class="name"><a id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</td>' . "\n";
+	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
+	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
+	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
+	echo "\t" . '<td class="icon"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
+	echo "\t" . '<td class="icon">' . ( $show->watching ? '' : '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching"><img src="arrow_right.png" alt="ARROW" /></a>' ) . '</td>' . "\n";
+	echo '</tr>' . "\n\n\n\n\n\n";
 }
 
 ?>
