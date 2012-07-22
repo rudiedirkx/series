@@ -373,9 +373,10 @@ echo $url2 . "\n";
 
 body, table { font-family: Verdana, Arial, sans-serif; font-size: 14px; border-collapse: separate; border-spacing: 0; }
 a { color: blue; }
+a img { border: 0; }
 table { border: solid 1px #000; }
 table.loading { opacity: 0.5; }
-tbody tr:nth-child(odd) { background-color: #eee; }
+tbody tr { background-color: #eee; }
 tbody tr:nth-child(even) { background-color: #ddd; }
 tbody tr.hilited td { background-color: lightblue; }
 td, th { border: solid 1px #fff; }
