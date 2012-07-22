@@ -391,7 +391,7 @@ td.next a, td.missed a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
-tr:not(.with-tvdb) > .tvdb > a { opacity: 0.3; }
+tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
 td img { width: 16px; height: 16px; display: block; }
 label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
 #torrent { position: absolute; visibility: hidden; }
