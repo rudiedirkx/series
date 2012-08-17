@@ -123,13 +123,25 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 			array_unshift($x, $S);
 		}
 
+		$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S));
+
 		// save
 		$ne = implode('.', $x);
 		$db->update('series', array('next_episode' => $ne), array('id' => $_POST['id']));
-		exit($ne);
+
+		// respond
+		header('Content-type: text/json');
+		exit(json_encode(array(
+			'next_episode' => $ne,
+			'season' => $S,
+			'episodes' => (int)$episodes,
+		)));
 	}
 
-	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
+	$ne = $db->select_one('series', 'next_episode', array('id' => $_POST['id']));
+	exit(json_encode(array(
+		'next_episode' => $ne,
+	)));
 }
 
 // Edit field: next
@@ -528,8 +540,16 @@ function changeValue(o, id, n, v) {
 function doAndRespond(o, d) {
 	var $o = $(o);
 	$o.html('<img src="spinner.gif" />');
-	$.post('', d, function(t) {
-		$o.html(t);
+	$.post('', d, function(rsp) {
+		if ( 'string' == typeof rsp ) {
+			$o.html(rsp);
+		}
+		else {
+			$o.html(rsp.next_episode);
+			if ( rsp.season && rsp.episodes ) {
+				$o.attr('title', 'Season ' + rsp.season + ' has ' + rsp.episodes + ' episodes');
+			}
+		}
 	});
 	return false;
 }
