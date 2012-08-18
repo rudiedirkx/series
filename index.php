@@ -33,6 +33,32 @@ $db->schema($schema);
 
 
 
+class Show extends db_generic_record {
+	protected $_cached = array();
+
+	public function __get( $name ) {
+		if ( is_callable($method = array($this, 'get_' . $name)) ) {
+			$this->_cached[] = $name;
+			return $this->$name = call_user_func($method);
+		}
+	}
+
+	public function get_current_season() {
+		return (int)$this->next_episode;
+	}
+
+	public function get_seasons() {
+		global $db;
+		return $db->select_fields('seasons', 'season, episodes', array('series_id' => $this->id));
+	}
+
+	public function get_num_seasons() {
+		return count($this->seasons);
+	}
+}
+
+
+
 // New show
 if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 	$insert = array(
@@ -431,7 +457,19 @@ label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
 <?php
 
 try {
-	$series = $db->fetch('SELECT s.*, COUNT(seasons.series_id) AS num_seasons, FLOOR(next_episode) AS current_season FROM series s LEFT JOIN seasons ON (s.id = seasons.series_id) WHERE s.deleted = 0 GROUP BY s.id ORDER BY s.active DESC, LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC');
+	$series = $db->fetch('
+		SELECT
+			s.*
+		FROM
+			series s
+		WHERE
+			s.deleted = 0
+		GROUP BY
+			s.id
+		ORDER BY
+			s.active DESC,
+			LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC
+	', 'Show');
 }
 catch ( db_exception $ex ) {
 	exit('Query error: ' . $ex->getMessage() . "\n");
@@ -443,17 +481,14 @@ foreach ( $series AS $n => $show ) {
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
 
-	$show->tvdb_series_id && $classes[] = 'with-tvdb';
-
 	$thisSeasonsEpisodes = '';
-	$show->seasons = $show->num_seasons = null;
 	if ( $show->tvdb_series_id ) {
-		$show->seasons = $db->select_fields('seasons', 'season,episodes', array('series_id' => $show->id));
-		$show->num_seasons = count($show->seasons);
-		if ( $show->active && $show->seasons ) {
-			$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => (int)$show->current_season));
+		$classes[] = 'with-tvdb';
+
+		if ( isset($show->seasons[$show->current_season]) ) {
+			$episodes = $show->seasons[$show->current_season];
 			if ( $episodes ) {
-				$thisSeasonsEpisodes = ' title="Season '.(int)$show->current_season.' has '.$episodes.' episodes"';
+				$thisSeasonsEpisodes = ' title="Season ' . (int)$show->current_season . ' has ' . $episodes . ' episodes"';
 			}
 		}
 	}
