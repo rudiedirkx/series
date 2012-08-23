@@ -107,53 +107,47 @@ else if ( isset($_POST['order']) ) {
 // Edit scrollable field: next
 else if ( isset($_POST['id'], $_POST['dir']) ) {
 	if ( 0 != (int)$_POST['dir'] ) {
-		$d = $_POST['dir'] < 0 ? -1 : 1;
+		$delta = $_POST['dir'] < 0 ? -1 : 1;
 
 		// fetch show
-		$show = $db->select('series', array('id' => $_POST['id']), null, true);
+		$show = $db->select('series', array('id' => $_POST['id']), null, 'Show')->first();
 		$ne = $show->next_episode;
 
-		// do +1 or -1 for smallest/last part
-		$x = array_map('intval', explode('.', $ne));
-		$i = count($x)-1;
-		$x[$i] += $d;
+		// Parse and up/down `next_episode`
+		$parts = array_map('intval', explode('.', $ne));
+		$parts[count($parts)-1] += $delta;
 
-		// end of season -> next season
-		if ( $show->tvdb_series_id && 2 == count($x) ) {
-			$S =& $x[0];
-			$E =& $x[1];
-			$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S));
-			if ( false !== $episodes ) {
-				// next season
-				if ( $E > $episodes ) {
-					$S++;
-					$E = 1;
-				}
-				// prev season
-				else if ( 0 >= $E ) {
-					$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S-1));
-					if ( false !== $episodes ) {
-						$S--;
-						$E = $episodes;
-					}
+		// Default feedback
+		$episodes = 0;
+
+		// Check S if E changed.
+		if ( 2 == count($parts) ) {
+			$S =& $parts[0];
+			$E =& $parts[1];
+
+			// Moving down
+			if ( $E < 1 && $S > 1 ) {
+				if ( isset($show->seasons[$S-1]) ) {
+					$S -= 1;
+					$E = $show->seasons[$S];
 				}
 			}
+			// Moving up
+			else if ( isset($show->seasons[$S]) && $E > $show->seasons[$S] ) {
+				$S += 1;
+				$E = 1;
+			}
+
+			// Add "0" padding
+			$E = str_pad($E, 2, '0', STR_PAD_LEFT);
+
+			// More detailed feedback
+			$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S));
 		}
 
-		// prepend 0's
-		if ( 2 <= count($x) ) {
-			$S = array_shift($x);
-			$x = array_map(function($n) {
-				return str_pad((string)$n, 2, '0', STR_PAD_LEFT);
-			}, $x);
-			array_unshift($x, $S);
-		}
-
-		$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S));
-
-		// save
-		$ne = implode('.', $x);
-		$db->update('series', array('next_episode' => $ne), array('id' => $_POST['id']));
+		// Save
+		$ne = implode('.', $parts);
+		$db->update('series', array('next_episode' => $ne), array('id' => $show->id));
 
 		// respond
 		header('Content-type: text/json');
@@ -164,10 +158,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 		)));
 	}
 
-	$ne = $db->select_one('series', 'next_episode', array('id' => $_POST['id']));
-	exit(json_encode(array(
-		'next_episode' => $ne,
-	)));
+	exit('W00t!?');
 }
 
 // Edit field: next
