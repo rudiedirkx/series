@@ -501,7 +501,7 @@ foreach ( $series AS $n => $show ) {
 
 <br />
 
-<form id="adding-show" method="post" action="#adding-show" style="padding-top: 10px;">
+<form method="post" action style="padding-top: 10px;">
 	<fieldset style="display: inline-block;">
 		<legend>Add show <?=$n+2?></legend>
 		<p>Name: <input type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
@@ -509,6 +509,8 @@ foreach ( $series AS $n => $show ) {
 		<p><input type="submit" value="Save" /><p>
 
 		<?if (@$adding_show_tvdb_result):?>
+			<script>window.onload = function() { scrollTo(0, document.body.scrollHeight); };</script>
+
 			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
 			<p><label><input type="checkbox" name="replace_existing" /> Save The TVDB into existing show</label></p>
 
