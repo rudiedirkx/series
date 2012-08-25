@@ -73,11 +73,16 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 			$insert['tvdb_series_id'] = $_POST['tvdb_series_id'];
 
 			if ( !empty($_POST['replace_existing']) ) {
-				$existingShow = $db->select('series', array('deleted' => 0, 'name' => $insert['name']), null, true);
+				$existingShow = $db->select('series', array('deleted' => 0, 'name' => $insert['name']), null, 'Show')->first();
 				if ( $existingShow ) {
 					$db->update('series', array('tvdb_series_id' => $insert['tvdb_series_id']), array('id' => $existingShow->id));
-					$insert = false;
 				}
+				else {
+					$adding_show_tvdb_result = true;
+					$noredirect = true;
+				}
+
+				$insert = false;
 			}
 		}
 
@@ -85,8 +90,10 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 			$db->insert('series', $insert);
 		}
 
-		header('Location: ./');
-		exit;
+		if ( empty($noredirect) ) {
+			header('Location: ./');
+			exit;
+		}
 	}
 	else {
 		$adding_show_tvdb_result = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($_POST['name']));
@@ -403,6 +410,7 @@ echo $url2 . "\n";
 body, table { font-family: Verdana, Arial, sans-serif; font-size: 14px; border-collapse: separate; border-spacing: 0; }
 a { color: blue; }
 a img { border: 0; }
+.error { color: red; }
 table { border: solid 1px #000; }
 table.loading { opacity: 0.5; }
 tbody tr { background-color: #eee; }
@@ -506,29 +514,31 @@ foreach ( $series AS $n => $show ) {
 		<legend>Add show <?=$n+2?></legend>
 		<p>Name: <input type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
 		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?=(string)@$_POST['tvdb_series_id']?>" /></p>
-		<p><input type="submit" value="Save" /><p>
+		<p><input type="submit" value="Next" /><p>
 
 		<?if (@$adding_show_tvdb_result):?>
 			<script>window.onload = function() { scrollTo(0, document.body.scrollHeight); };</script>
 
 			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
-			<p><label><input type="checkbox" name="replace_existing" /> Save The TVDB into existing show</label></p>
+			<p<?if (false === @$existingShow): ?> class="error"<? endif ?>><label><input type="checkbox" name="replace_existing" /> Save The TVDB into existing show</label></p>
 
-			<div class="search-results">
-				<ul>
-					<?foreach ($adding_show_tvdb_result->Series AS $show):?>
-						<li>
-							<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
-							<!--
-								(<?=$show->banner?>)
-								<img src="http://www.thetvdb.com/banners/graphical/<?=$show->seriesid?>-g.jpg" alt="banner" />
-							-->
-							(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
-						</li>
-					<?endforeach?>
-				</ul>
-				<pre><?php //print_r($adding_show_tvdb_result); ?></pre>
-			</div>
+			<?if (!is_scalar($adding_show_tvdb_result)):?>
+				<div class="search-results">
+					<ul>
+						<?foreach ($adding_show_tvdb_result->Series AS $show):?>
+							<li>
+								<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
+								<!--
+									(<?=$show->banner?>)
+									<img src="http://www.thetvdb.com/banners/graphical/<?=$show->seriesid?>-g.jpg" alt="banner" />
+								-->
+								(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
+							</li>
+						<?endforeach?>
+					</ul>
+					<pre><?php //print_r($adding_show_tvdb_result); ?></pre>
+				</div>
+			<?endif?>
 		<?endif?>
 	</fieldset>
 </form>
