@@ -593,16 +593,16 @@ function doAndRespond(o, d) {
 }
 
 $('#series')
-	.on('contextmenu', '.missed.oc a', function(e) {
+	.on('contextmenu', '.next.oc a', function(e) {
 		e.preventDefault();
 		var $this = $(this);
 		$this.addClass('eligable');
 	})
-	.on('mouseleave', '.missed.oc a', function(e) {
+	.on('mouseleave', '.next.oc a', function(e) {
 		var $this = $(this);
 		$this.removeClass('eligable');
 	})
-	.on('mousewheel DOMMouseScroll', '.missed.oc a', function(e) {
+	.on('mousewheel DOMMouseScroll', '.next.oc a', function(e) {
 		var $this = $(this),
 			direction = 'number' == typeof e.originalEvent.wheelDelta ? -e.originalEvent.wheelDelta : e.originalEvent.detail;
 		// Firefox messes up here... It doesn't cancel the scroll event. If I move
