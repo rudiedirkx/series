@@ -34,6 +34,12 @@ $db->schema($schema);
 
 
 class Show extends db_generic_record {
+	static public function get( $id ) {
+		global $db;
+		$show = $db->select('series', array('id' => $id), null, 'Show')->first();
+		return $show;
+	}
+
 	public $_cached = array();
 
 	public function __get( $name ) {
@@ -60,8 +66,10 @@ class Show extends db_generic_record {
 class Config {
 	public $defaults = array(
 		'upload_label' => 1,
-		'sortable' => 1,
-		'active_up_top' => 0,
+		'sortable' => 0,
+		'active_up_top' => 1,
+		'watching_up_top' => 1,
+		'max_watching' => 2,
 	);
 	public $vars = null;
 
@@ -161,7 +169,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 		$delta = $_POST['dir'] < 0 ? -1 : 1;
 
 		// fetch show
-		$show = $db->select('series', array('id' => $_POST['id']), null, 'Show')->first();
+		$show = Show::get($_POST['id']);
 		$ne = $show->next_episode;
 
 		// Parse and up/down `next_episode`
@@ -251,8 +259,16 @@ else if ( isset($_GET['delete']) ) {
 
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
-	$db->update('series', 'watching = 0', '1'); // all of them
-	$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
+	// Toggle selected
+	if ( $cfg->max_watching > 1 ) {
+		$show = Show::get($_GET['watching']);
+		$db->update('series', array('watching' => (int)!$show->watching), array('id' => $_GET['watching']));
+	}
+	// Only selected (no toggle, just ON)
+	else {
+		$db->update('series', 'watching = 0', '1');
+		$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
+	}
 
 	header('Location: ./');
 	exit;
@@ -525,6 +541,7 @@ try {
 			s.id
 		ORDER BY
 			s.active DESC,
+			' . ( $cfg->watching_up_top ? 'watching DESC,' : '' ) . '
 			' . ( $cfg->sortable ? 's.o ASC,' : '' ) . '
 			LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC
 	', 'Show');
@@ -561,7 +578,7 @@ foreach ( $series AS $n => $show ) {
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="icon"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
-	echo "\t" . '<td class="icon">' . ( $show->watching ? '' : '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching"><img src="arrow_right.png" alt="ARROW" /></a>' ) . '</td>' . "\n";
+	echo "\t" . '<td class="icon">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
 }
 
