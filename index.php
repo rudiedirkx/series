@@ -34,7 +34,13 @@ $db->schema($schema);
 
 
 class Show extends db_generic_record {
-	protected $_cached = array();
+	static public function get( $id ) {
+		global $db;
+		$show = $db->select('series', array('id' => $id), null, 'Show')->first();
+		return $show;
+	}
+
+	public $_cached = array();
 
 	public function __get( $name ) {
 		if ( is_callable($method = array($this, 'get_' . $name)) ) {
@@ -56,6 +62,52 @@ class Show extends db_generic_record {
 		return count($this->seasons);
 	}
 }
+
+class Config {
+	public $defaults = array(
+		'upload_label' => 1,
+		'sortable' => 0,
+		'active_up_top' => 1,
+		'watching_up_top' => 1,
+		'max_watching' => 2,
+	);
+	public $vars = null;
+
+	function loadVars() {
+		global $db;
+
+		$this->vars = $db->select_fields('variables', 'name, value', '1');
+	}
+
+	function ensureVars() {
+		is_array($this->vars) || $this->loadVars();
+	}
+
+	function __get( $name ) {
+		return $this->get($name);
+	}
+
+	function get( $name, $alt = null ) {
+		$this->ensureVars();
+
+		if ( 2 > func_num_args() ) {
+			if ( isset($this->defaults[$name]) ) {
+				$alt = $this->defaults[$name];
+			}
+		}
+
+		return isset($this->vars[$name]) ? $this->vars[$name] : $alt;
+	}
+}
+
+$cfg = new Config;
+
+/*echo '<pre>';
+print_r($var);
+var_dump($var->ass);
+var_dump($var->upload_label);
+print_r($var);
+echo '</pre>';*/
 
 
 
@@ -117,7 +169,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 		$delta = $_POST['dir'] < 0 ? -1 : 1;
 
 		// fetch show
-		$show = $db->select('series', array('id' => $_POST['id']), null, 'Show')->first();
+		$show = Show::get($_POST['id']);
 		$ne = $show->next_episode;
 
 		// Parse and up/down `next_episode`
@@ -212,8 +264,16 @@ else if ( isset($_GET['delete']) ) {
 
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
-	$db->update('series', 'watching = 0', '1'); // all of them
-	$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
+	// Toggle selected
+	if ( $cfg->max_watching > 1 ) {
+		$show = Show::get($_GET['watching']);
+		$db->update('series', array('watching' => (int)!$show->watching), array('id' => $_GET['watching']));
+	}
+	// Only selected (no toggle, just ON)
+	else {
+		$db->update('series', 'watching = 0', '1');
+		$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
+	}
 
 	header('Location: ./');
 	exit;
@@ -421,7 +481,7 @@ table.loading { opacity: 0.5; }
 tbody tr { background-color: #eee; }
 tbody tr:nth-child(even) { background-color: #ddd; }
 tbody tr.hilited td { background-color: lightblue; }
-td, th { border: solid 1px #fff; }
+td, th { border: solid 1px #fff; vertical-align: middle; }
 a { text-decoration: none; }
 a[href] { text-decoration: underline; }
 .name a:first-child { color: red; }
@@ -435,20 +495,34 @@ tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
-td img { width: 16px; height: 16px; display: block; }
-label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
-#torrent { position: absolute; left: -999px; }
+td:not(.move) img { width: 16px; height: 16px; display: block; }
+<? if ($cfg->upload_label): ?>
+	label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
+	#torrent { position: absolute; left: -999px; }
+<? else: ?>
+	label[for=torrent] > span:after { content: ":"; }
+<? endif ?>
+td.move { cursor: move; }
 </style>
 </head>
 
 <body>
+
 <form method=post action enctype="multipart/form-data">
-	<p><label for="torrent"><input type=file name=torrent id=torrent onchange=this.form.submit()> Upload .torrent to download subs</label></p>
+	<p>
+		<label tabindex="0" for="torrent">
+			<span>Upload .torrent to download subs</span>
+			<input type="file" name="torrent" id="torrent" onchange="this.form.submit();">
+		</label>
+	</p>
 </form>
 
 <table id="series">
 <thead>
 <tr class="hd" bgcolor="#bbbbbb">
+	<? if ($cfg->sortable): ?>
+		<th></th>
+	<? endif ?>
 	<th></th>
 	<th>Name</th>
 	<th>Nxt</th>
@@ -472,6 +546,8 @@ try {
 			s.id
 		ORDER BY
 			s.active DESC,
+			' . ( $cfg->watching_up_top ? 'watching DESC,' : '' ) . '
+			' . ( $cfg->sortable ? 's.o ASC,' : '' ) . '
 			LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC
 	', 'Show');
 }
@@ -498,13 +574,16 @@ foreach ( $series AS $n => $show ) {
 	}
 
 	echo '<tr class="' . implode(' ', $classes) . '" showid="' . $show->id . '">' . "\n";
+	if ($cfg->sortable) {
+		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
+	}
 	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name"><a id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</td>' . "\n";
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="icon"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
-	echo "\t" . '<td class="icon">' . ( $show->watching ? '' : '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching"><img src="arrow_right.png" alt="ARROW" /></a>' ) . '</td>' . "\n";
+	echo "\t" . '<td class="icon">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
 }
 
@@ -621,6 +700,7 @@ $('#series')
 		}
 	});
 </script>
+
 </body>
 
 </html>
