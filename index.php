@@ -191,7 +191,12 @@ else if ( isset($_POST['id'], $_POST['name']) ) {
 
 // Toggle active status
 else if ( isset($_GET['id'], $_GET['active']) ) {
-	$db->update('series', array('active' => (bool)$_GET['active']), array('id' => $_GET['id']));
+	$active = (bool)$_GET['active'];
+
+	$update = array('active' => $active);
+	!$active && $update['watching'] = false;
+
+	$db->update('series', $update, array('id' => $_GET['id']));
 
 	header('Location: ./');
 	exit;
