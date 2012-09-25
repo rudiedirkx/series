@@ -267,7 +267,24 @@ else if ( isset($_GET['watching']) ) {
 	// Toggle selected
 	if ( $cfg->max_watching > 1 ) {
 		$show = Show::get($_GET['watching']);
-		$db->update('series', array('watching' => (int)!$show->watching), array('id' => $_GET['watching']));
+
+		// Unwatch
+		if ($show->watching) {
+			$update = array('watching' => 0);
+			$db->update('series', $update, array('id' => $show->id));
+		}
+		// Watch
+		else {
+			$maxWatching = $db->select_one('series', 'max(watching)', '1');
+			$update = array('watching' => $maxWatching + 1);
+			$db->update('series', $update, array('id' => $show->id));
+
+			// Only allow $cfg->max_watching shows to have watching > 1
+			$allWatching = $db->select_fields('series', 'id,watching', 'watching > 0 ORDER BY watching DESC, id DESC');
+			$allWatching = array_keys($allWatching);
+			$illegallyWatching = array_slice($allWatching, $cfg->max_watching);
+			$db->update('series', array('watching' => 0), array('id' => $illegallyWatching));
+		}
 	}
 	// Only selected (no toggle, just ON)
 	else {
@@ -537,18 +554,18 @@ td.move { cursor: move; }
 try {
 	$series = $db->fetch('
 		SELECT
-			s.*
+			*
 		FROM
-			series s
+			series
 		WHERE
-			s.deleted = 0
+			deleted = 0
 		GROUP BY
-			s.id
+			id
 		ORDER BY
-			s.active DESC,
-			' . ( $cfg->watching_up_top ? 'watching DESC,' : '' ) . '
-			' . ( $cfg->sortable ? 's.o ASC,' : '' ) . '
-			LOWER(IF(\'the \' = LOWER(substr(s.name, 1, 4)), SUBSTR(s.name, 5), s.name)) ASC
+			active DESC,
+			' . ( $cfg->watching_up_top ? '(watching > 0) DESC,' : '' ) . '
+			' . ( $cfg->sortable ? 'o ASC,' : '' ) . '
+			LOWER(IF(\'the \' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC
 	', 'Show');
 }
 catch ( db_exception $ex ) {
@@ -630,7 +647,7 @@ foreach ( $series AS $n => $show ) {
 <br />
 <br />
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="jquery-1.7.2.min.js"></script>
 <script>
 $('a.tvdb-search-result').on('click', function(e) {
 	e.preventDefault();
