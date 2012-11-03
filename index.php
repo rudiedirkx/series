@@ -69,7 +69,7 @@ class Config {
 		'sortable' => 0,
 		'active_up_top' => 1,
 		'watching_up_top' => 1,
-		'max_watching' => 2,
+		'max_watching' => 3,
 	);
 	public $vars = null;
 
@@ -300,10 +300,10 @@ else if ( isset($_GET['watching']) ) {
 else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
-	if ( $show = $db->select('series', array('id' => $id), null, true) ) {
+	if ( $show = Show::get($id) ) {
 		if ( !$show->tvdb_series_id ) {
 			// get tvdb's series_id // simple API's rule!
-			$xml = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname='.urlencode($show->name));
+			$xml = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($show->name));
 			if ( isset($xml->Series[0]) ) {
 				$Series = (array)$xml->Series[0];
 				if ( isset($Series['seriesid'], $Series['IMDB_ID']) ) {
@@ -321,8 +321,8 @@ else if ( isset($_GET['updateshow']) ) {
 
 		if ( $show->tvdb_series_id ) {
 			// get package with details
-			$zipfile = './tmp/show-'.$show->tvdb_series_id.'.zip';
-			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/'.TVDB_API_KEY.'/series/'.$show->tvdb_series_id.'/all/en.zip'));
+			$zipfile = './tmp/show-' . $show->tvdb_series_id . '.zip';
+			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $show->tvdb_series_id . '/all/en.zip'));
 
 			// read from it
 			$zip = zip_open($zipfile);
@@ -337,6 +337,13 @@ else if ( isset($_GET['updateshow']) ) {
 						zip_entry_close($entry);
 
 						$xml = simplexml_load_string($xml);
+
+						// save description
+						$db->update('series', array(
+							'description' => $xml->Series->Overview,
+						), array('id' => $id));
+
+						// get seasons
 						$seasons = array();
 						foreach ( $xml->Episode AS $episode ) {
 							$S = (int)$episode->Combined_season;
@@ -590,17 +597,22 @@ foreach ( $series AS $n => $show ) {
 		}
 	}
 
+	$title = '';
+	if ( $show->description ) {
+		$title = ' title="' . html(substr($show->description, 0, 200)) . '...' . '"';
+	}
+
 	echo '<tr class="' . implode(' ', $classes) . '" showid="' . $show->id . '">' . "\n";
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
 	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
-	echo "\t" . '<td class="name"><a id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</td>' . "\n";
+	echo "\t" . '<td class="name"><a' . $title . ' id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</td>' . "\n";
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="icon"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
-	echo "\t" . '<td class="icon">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
+	echo "\t" . '<td class="icon">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
 }
 

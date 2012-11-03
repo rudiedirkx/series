@@ -14,6 +14,7 @@ return array(
 		'tvdb_series_id',
 		'data' => array('type' => 'text'),
 		'uptodate' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
+		'description' => array('type' => 'text'),
 	),
 	'seasons' => array(
 		'series_id' => array('unsigned' => true),
