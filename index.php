@@ -325,51 +325,46 @@ else if ( isset($_GET['updateshow']) ) {
 			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $show->tvdb_series_id . '/all/en.zip'));
 
 			// read from it
-			$zip = zip_open($zipfile);
-			while ( $entry = zip_read($zip) ) {
-				$filename = zip_entry_name($entry);
-				if ( 'en.xml' == $filename ) {
-					if ( zip_entry_open($zip, $entry) ) {
-						$xml = '';
-						while ( $data = zip_entry_read($entry) ) {
-							$xml .= $data;
-						}
-						zip_entry_close($entry);
+			$zip = new ZipArchive;
+			if ($zip->open($zipfile) !== TRUE) {
+				exit('Ugh?');
+			}
+			$xml = $zip->getFromName('en.xml');
+			$zip->close();
 
-						$xml = simplexml_load_string($xml);
+			$xml = simplexml_load_string($xml);
 
-						// save description
-						$db->update('series', array(
-							'description' => $xml->Series->Overview,
-						), array('id' => $id));
+			// save description
+			$db->update('series', array(
+				'description' => $xml->Series->Overview,
+			), array('id' => $id));
 
-						// get seasons
-						$seasons = array();
-						foreach ( $xml->Episode AS $episode ) {
-							$S = (int)$episode->Combined_season;
-							$E = (int)$episode->Combined_episodenumber;
-							if ( $S && $E ) {
-								if ( !isset($seasons[$S]) ) {
-									$seasons[$S] = $E;
-								}
-								else {
-									$seasons[$S] = max($seasons[$S], $E);
-								}
-							}
-						}
-
-						// save seasons
-						$db->delete('seasons', array('series_id' => $show->id));
-						foreach ( $seasons AS $S => $E ) {
-							$db->insert('seasons', array(
-								'series_id' => $show->id,
-								'season' => $S,
-								'episodes' => $E,
-							));
-						}
+			// get seasons
+			$seasons = array();
+			foreach ( $xml->Episode AS $episode ) {
+				$S = (int)$episode->Combined_season;
+				$E = (int)$episode->Combined_episodenumber;
+				if ( $S && $E ) {
+					if ( !isset($seasons[$S]) ) {
+						$seasons[$S] = $E;
+					}
+					else {
+						$seasons[$S] = max($seasons[$S], $E);
 					}
 				}
 			}
+
+			// save seasons
+			$db->begin();
+			$db->delete('seasons', array('series_id' => $show->id));
+			foreach ( $seasons AS $S => $E ) {
+				$db->insert('seasons', array(
+					'series_id' => $show->id,
+					'season' => $S,
+					'episodes' => $E,
+				));
+			}
+			$db->commit();
 		}
 	}
 
