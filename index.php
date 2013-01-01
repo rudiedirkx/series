@@ -31,6 +31,9 @@ if ( !$db ) {
 $schema = require 'db-schema.php';
 $db->schema($schema);
 
+// Everything. UTF-8. Always. Everywhere.
+mb_internal_encoding('UTF-8');
+
 
 
 class Show extends db_generic_record {
@@ -574,8 +577,11 @@ catch ( db_exception $ex ) {
 	exit('Query error: ' . $ex->getMessage() . "\n");
 }
 
+$showNames = array();
 $n = -1;
 foreach ( $series AS $n => $show ) {
+	$showNames[] = mb_strtolower($show->name);
+
 	$classes = array();
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
@@ -628,7 +634,7 @@ foreach ( $series AS $n => $show ) {
 			<script>window.onload = function() { scrollTo(0, document.body.scrollHeight); };</script>
 
 			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
-			<p<?if (false === @$existingShow): ?> class="error"<? endif ?>><label><input type="checkbox" name="replace_existing" /> Save The TVDB into existing show</label></p>
+			<p<?if (false === @$existingShow): ?> class="error"<? endif ?>><label><input type="checkbox" name="replace_existing" <? if (in_array(mb_strtolower(@$_POST['name']), $showNames)): ?>checked<? endif ?> /> Save The TVDB into existing show</label></p>
 
 			<?if (!is_scalar($adding_show_tvdb_result)):?>
 				<div class="search-results">
