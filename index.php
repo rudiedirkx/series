@@ -647,10 +647,10 @@ foreach ( $series AS $n => $show ) {
 									<img src="http://www.thetvdb.com/banners/graphical/<?=$show->seriesid?>-g.jpg" alt="banner" />
 								-->
 								(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
+								<div class="tvdb-search-result-description"><?=html($show->Overview)?></div>
 							</li>
 						<?endforeach?>
 					</ul>
-					<pre><?php //print_r($adding_show_tvdb_result); ?></pre>
 				</div>
 			<?endif?>
 		<?endif?>
