@@ -130,7 +130,8 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 			if ( !empty($_POST['replace_existing']) ) {
 				$existingShow = $db->select('series', array('deleted' => 0, 'name' => $insert['name']), null, 'Show')->first();
 				if ( $existingShow ) {
-					$db->update('series', array('tvdb_series_id' => $insert['tvdb_series_id']), array('id' => $existingShow->id));
+					$update = array('name' => $insert['name'], 'tvdb_series_id' => $insert['tvdb_series_id']);
+					$db->update('series', $update, array('id' => $existingShow->id));
 				}
 				else {
 					$adding_show_tvdb_result = true;
@@ -371,7 +372,7 @@ else if ( isset($_GET['updateshow']) ) {
 		}
 	}
 
-	header('Location: ./');
+	header('Location: ./#show-' . $id);
 	exit;
 }
 
@@ -525,6 +526,9 @@ td:not(.move) img { width: 16px; height: 16px; display: block; }
 	label[for=torrent] > span:after { content: ":"; }
 <? endif ?>
 td.move { cursor: move; }
+tr:target td {
+	 background:lightblue;
+}
 </style>
 </head>
 
@@ -546,7 +550,7 @@ td.move { cursor: move; }
 		<th></th>
 	<? endif ?>
 	<th></th>
-	<th>Name</th>
+	<th>Name <a href="javascript:$('#showname').focus();void(0);">+</a></th>
 	<th>Nxt</th>
 	<th>Not</th>
 	<th title="Existing seasons">S</th>
@@ -603,7 +607,7 @@ foreach ( $series AS $n => $show ) {
 		$title = ' title="' . html(substr($show->description, 0, 200)) . '...' . '"';
 	}
 
-	echo '<tr class="' . implode(' ', $classes) . '" showid="' . $show->id . '">' . "\n";
+	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '">' . "\n";
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
@@ -626,7 +630,7 @@ foreach ( $series AS $n => $show ) {
 <form method="post" action style="padding-top: 10px;">
 	<fieldset style="display: inline-block;">
 		<legend>Add show <?=$n+2?></legend>
-		<p>Name: <input type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
+		<p>Name: <input id="showname" type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
 		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?=(string)@$_POST['tvdb_series_id']?>" /></p>
 		<p><input type="submit" value="Next" /><p>
 
@@ -732,6 +736,8 @@ $('#series')
 </script>
 
 </body>
+
+<!-- <?= count($db->queries); ?> queries -->
 
 </html>
 <?php
