@@ -19,20 +19,16 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 # 5. store in series.data
 
 
-require_once '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic
-//$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
-$db = db_sqlite::open(array('database' => 'db/series.sqlite3'));
+require 'bootstrap.php';
 
-if ( !$db ) {
-	exit('<p>Que pasa, amigo!? No connecto to databaso! Si? <strong>No bueno!</strong></p>');
+// Define env vars
+define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+
+// Get and reset highlighted show
+$hilited = (int)@$_COOKIE['series_hilited'];
+if ( $hilited ) {
+	setcookie('series_hilited', '', 1);
 }
-
-// verify db schema
-$schema = require 'db-schema.php';
-$db->schema($schema);
-
-// Everything. UTF-8. Always. Everywhere.
-mb_internal_encoding('UTF-8');
 
 
 
@@ -372,7 +368,14 @@ else if ( isset($_GET['updateshow']) ) {
 		}
 	}
 
-	header('Location: ./#show-' . $id);
+	if ( AJAX ) {
+		setcookie('series_hilited', $id);
+		echo 'OK';
+	}
+	else {
+		header('Location: ./#show-' . $id);
+	}
+
 	exit;
 }
 
@@ -526,8 +529,9 @@ td:not(.move) img { width: 16px; height: 16px; display: block; }
 	label[for=torrent] > span:after { content: ":"; }
 <? endif ?>
 td.move { cursor: move; }
-tr:target td {
-	 background:lightblue;
+tr:target td,
+tr.hilite td {
+	background: lightblue;
 }
 </style>
 </head>
@@ -602,6 +606,10 @@ foreach ( $series AS $n => $show ) {
 		}
 	}
 
+	if ( $hilited == $show->id ) {
+		$classes[] = 'hilited';
+	}
+
 	$title = '';
 	if ( $show->description ) {
 		$title = ' title="' . html(substr($show->description, 0, 200)) . '...' . '"';
@@ -672,6 +680,24 @@ $('a.tvdb-search-result').on('click', function(e) {
 		id = $this.data('id');
 	$('#add_tvdb_series_id').val(id);
 });
+
+$('td.tvdb > a').on('click', function(e) {
+	e.preventDefault();
+	$(this).children('img').attr('src', 'loading16.gif');
+	$.post(this.href, function(t) {
+		RorA(t);
+	});
+});
+
+function RorA(t, fn) {
+	fn || (fn = function() {
+		location.reload();
+	});
+	if ( t == 'OK' ) {
+		return fn();
+	}
+	alert(t);
+}
 
 function changeName(id, name) {
 	$.post('', 'id=' + id + '&name=' + encodeURIComponent(name), function(t) {
