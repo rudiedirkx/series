@@ -533,6 +533,14 @@ tr:target td,
 tr.hilite td {
 	background: lightblue;
 }
+@media (max-width: 400px) {
+	tr > .tvdb,
+	span.edit-title,
+	tr > .missed,
+	tr > .icon {
+		display: none;
+	}
+}
 </style>
 </head>
 
@@ -553,12 +561,12 @@ tr.hilite td {
 	<? if ($cfg->sortable): ?>
 		<th></th>
 	<? endif ?>
-	<th></th>
+	<th class="tvdb"></th>
 	<th>Name <a href="javascript:$('#showname').focus();void(0);">+</a></th>
 	<th>Nxt</th>
-	<th>Not</th>
-	<th title="Existing seasons">S</th>
-	<th colspan="2"></th>
+	<th class="missed">Not</th>
+	<th class="seasons" title="Existing seasons">S</th>
+	<th class="icon" colspan="2"></th>
 </tr>
 </thead>
 <tbody class="sortable">
@@ -620,7 +628,7 @@ foreach ( $series AS $n => $show ) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
 	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
-	echo "\t" . '<td class="name"><a' . $title . ' id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> (<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</td>' . "\n";
+	echo "\t" . '<td class="name"><a' . $title . ' id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> <span class="edit-title">(<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</span></td>' . "\n";
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
