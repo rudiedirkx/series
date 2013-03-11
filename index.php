@@ -1,7 +1,5 @@
 <?php
 
-header('Content-type: text/html; charset=utf-8');
-
 define('TVDB_API_KEY', '94F0BD0D5948FE69');
 
 ## tvdb
@@ -69,6 +67,7 @@ class Config {
 		'active_up_top' => 1,
 		'watching_up_top' => 1,
 		'max_watching' => 3,
+		'banners' => 1,
 	);
 	public $vars = null;
 
@@ -333,10 +332,12 @@ else if ( isset($_GET['updateshow']) ) {
 			$zip->close();
 
 			$xml = simplexml_load_string($xml);
+			$data = (array)$xml->Series;
 
 			// save description
 			$db->update('series', array(
-				'description' => $xml->Series->Overview,
+				'description' => $data['Overview'],
+				'data' => json_encode($data),
 			), array('id' => $id));
 
 			// get seasons
@@ -533,6 +534,7 @@ tr:target td,
 tr.hilite td {
 	background: lightblue;
 }
+#banner { position: fixed; top: 10px; right: 10px; }
 @media (max-width: 400px) {
 	tr > .tvdb,
 	span.edit-title,
@@ -545,6 +547,8 @@ tr.hilite td {
 </head>
 
 <body>
+
+<img id="banner" />
 
 <form method=post action enctype="multipart/form-data">
 	<p>
@@ -563,6 +567,9 @@ tr.hilite td {
 	<? endif ?>
 	<th class="tvdb"></th>
 	<th>Name <a href="javascript:$('#showname').focus();void(0);">+</a></th>
+	<? if ($cfg->banners): ?>
+		<th class="picture"></th>
+	<? endif ?>
 	<th>Nxt</th>
 	<th class="missed">Not</th>
 	<th class="seasons" title="Existing seasons">S</th>
@@ -602,7 +609,7 @@ foreach ( $series AS $n => $show ) {
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
 
-	$thisSeasonsEpisodes = '';
+	$thisSeasonsEpisodes = $banner = '';
 	if ( $show->tvdb_series_id ) {
 		$classes[] = 'with-tvdb';
 
@@ -610,6 +617,14 @@ foreach ( $series AS $n => $show ) {
 			$episodes = $show->seasons[$show->current_season];
 			if ( $episodes ) {
 				$thisSeasonsEpisodes = ' title="Season ' . (int)$show->current_season . ' has ' . $episodes . ' episodes"';
+			}
+		}
+
+		if ( $cfg->banners ) {
+			if ( $data = @json_decode($show->data) ) {
+				if ( @$data->banner ) {
+					$banner = $data->banner;
+				}
 			}
 		}
 	}
@@ -623,12 +638,15 @@ foreach ( $series AS $n => $show ) {
 		$title = ' title="' . html(substr($show->description, 0, 200)) . '...' . '"';
 	}
 
-	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '">' . "\n";
+	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '" data-banner="' . html($banner) . '">' . "\n";
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
 	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name"><a' . $title . ' id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> <span class="edit-title">(<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</span></td>' . "\n";
+	if ($cfg->banners) {
+		echo "\t" . '<td class="picture">' . ( $banner ? '<img src="picture.png" alt="banner" />' : '' ) . '</td>' . "\n";
+	}
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
@@ -695,6 +713,13 @@ $('td.tvdb > a').on('click', function(e) {
 	$.post(this.href, function(t) {
 		RorA(t);
 	});
+});
+
+$('tr[data-banner] .name').on('mouseover', function(e) {
+	var src = 'http://thetvdb.com/banners/' + $(this).closest('tr').data('banner');
+	$('#banner').attr('src', src).show();
+}).on('mouseout', function(e) {
+	$('#banner').hide();
 });
 
 function RorA(t, fn) {
@@ -767,6 +792,15 @@ $('#series')
 			doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
 		}
 	});
+
+$.fn.update = function(attrs) {
+	if ( 'html' in attrs ) {
+		this.html(attrs.html);
+		delete attrs.html;
+	}
+
+	return this.attr(attrs);
+};
 </script>
 
 </body>

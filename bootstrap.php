@@ -19,5 +19,6 @@ if ( !is_dir('tmp') || !is_writable('tmp') ) {
 
 // Everything. UTF-8. Always. Everywhere.
 mb_internal_encoding('UTF-8');
+header('Content-type: text/html; charset=utf-8');
 
 
