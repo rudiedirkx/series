@@ -511,8 +511,8 @@ tbody tr.hilited td { background-color: lightblue; }
 td, th { border: solid 1px #fff; vertical-align: middle; }
 a { text-decoration: none; }
 a[href] { text-decoration: underline; }
-.name a:first-child { color: red; }
-tr.active .name a:first-child { color: green; }
+.name .show-name { color: red; }
+tr.active .show-name { color: green; }
 td.seasons { text-align: center; }
 td.oc a { display: block; text-decoration: none; color: black; }
 td.oc a:hover { background-color: #ccc; }
@@ -535,6 +535,9 @@ tr.hilite td {
 	background: lightblue;
 }
 #banner { position: fixed; top: 10px; right: 10px; }
+@media (max-width: 1100px) {
+	#banner { display: none !important; }
+}
 @media (max-width: 400px) {
 	tr > .tvdb,
 	span.edit-title,
@@ -643,7 +646,7 @@ foreach ( $series AS $n => $show ) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
 	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
-	echo "\t" . '<td class="name"><a' . $title . ' id="show-name-' . $show->id . '"' . ( $show->url ? ' href="' . $show->url . '"' : '' ) . '>' . $show->name . '</a> <span class="edit-title">(<a href="#" onclick="return changeValue(this.parentNode.firstChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</span></td>' . "\n";
+	echo "\t" . '<td class="name"><span' . $title . ' class="show-name" id="show-name-' . $show->id . '">' . $show->name . '</span> <span class="edit-title">(<a href="#" onclick="return changeValue(this.parentNode.parentNode.firstElementChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</span></td>' . "\n";
 	if ($cfg->banners) {
 		echo "\t" . '<td class="picture">' . ( $banner ? '<img src="picture.png" alt="banner" />' : '' ) . '</td>' . "\n";
 	}
@@ -741,7 +744,7 @@ function changeName(id, name) {
 
 function changeValue(o, id, n, v) {
 	var $o = $(o);
-	v == undefined && (v = $o.html())
+	v == undefined && (v = $.trim($o.text()));
 	var nv = prompt('New value:', v);
 	if ( null === nv ) {
 		return false;
