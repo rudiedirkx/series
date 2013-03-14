@@ -17,7 +17,7 @@ define('TVDB_API_KEY', '94F0BD0D5948FE69');
 # 5. store in series.data
 
 
-require 'bootstrap.php';
+require 'inc.bootstrap.php';
 
 // Define env vars
 define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
@@ -57,44 +57,6 @@ class Show extends db_generic_record {
 
 	public function get_num_seasons() {
 		return count($this->seasons);
-	}
-}
-
-class Config {
-	public $defaults = array(
-		'upload_label' => 1,
-		'sortable' => 0,
-		'active_up_top' => 1,
-		'watching_up_top' => 1,
-		'max_watching' => 3,
-		'banners' => 1,
-	);
-	public $vars = null;
-
-	function loadVars() {
-		global $db;
-
-		$this->vars = $db->select_fields('variables', 'name, value', '1');
-	}
-
-	function ensureVars() {
-		is_array($this->vars) || $this->loadVars();
-	}
-
-	function __get( $name ) {
-		return $this->get($name);
-	}
-
-	function get( $name, $alt = null ) {
-		$this->ensureVars();
-
-		if ( 2 > func_num_args() ) {
-			if ( isset($this->defaults[$name]) ) {
-				$alt = $this->defaults[$name];
-			}
-		}
-
-		return isset($this->vars[$name]) ? $this->vars[$name] : $alt;
 	}
 }
 
@@ -343,8 +305,8 @@ else if ( isset($_GET['updateshow']) ) {
 			// get seasons
 			$seasons = array();
 			foreach ( $xml->Episode AS $episode ) {
-				$S = (int)$episode->Combined_season;
-				$E = (int)$episode->Combined_episodenumber;
+				$S = (int)(string)$episode->SeasonNumber;
+				$E = (int)(string)$episode->EpisodeNumber;
 				if ( $S && $E ) {
 					if ( !isset($seasons[$S]) ) {
 						$seasons[$S] = $E;
@@ -616,7 +578,7 @@ foreach ( $series AS $n => $show ) {
 	if ( $show->tvdb_series_id ) {
 		$classes[] = 'with-tvdb';
 
-		if ( isset($show->seasons[$show->current_season]) ) {
+		if ( ($show->active || $cfg->load_tvdb_inactive) && isset($show->seasons[$show->current_season]) ) {
 			$episodes = $show->seasons[$show->current_season];
 			if ( $episodes ) {
 				$thisSeasonsEpisodes = ' title="Season ' . (int)$show->current_season . ' has ' . $episodes . ' episodes"';
@@ -626,7 +588,7 @@ foreach ( $series AS $n => $show ) {
 		if ( $cfg->banners ) {
 			if ( $data = @json_decode($show->data) ) {
 				if ( @$data->banner ) {
-					$banner = $data->banner;
+					$banner = 'data-banner="' . html($data->banner) . '"';
 				}
 			}
 		}
@@ -641,7 +603,7 @@ foreach ( $series AS $n => $show ) {
 		$title = ' title="' . html(substr($show->description, 0, 200)) . '...' . '"';
 	}
 
-	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '" data-banner="' . html($banner) . '">' . "\n";
+	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '"' . $banner . '>' . "\n";
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
@@ -652,7 +614,7 @@ foreach ( $series AS $n => $show ) {
 	}
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
-	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
+	echo "\t" . '<td class="seasons">' . ( ($show->active || $cfg->load_tvdb_inactive) && $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="icon"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
 	echo "\t" . '<td class="icon">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
@@ -809,12 +771,8 @@ $.fn.update = function(attrs) {
 </body>
 
 <!-- <?= count($db->queries); ?> queries -->
+<!-- <? print_r($db->queries); ?> -->
 
 </html>
-<?php
-
-function html($str) {
-	return htmlspecialchars($str, ENT_COMPAT, 'UTF-8');
-}
 
 

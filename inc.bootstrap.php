@@ -1,6 +1,8 @@
 <?php
 
-require_once '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic
+require 'inc.functions.php';
+
+require '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic
 //$db = db_mysql::open(array('user' => 'usagerplus', 'pass' => 'usager', 'database' => 'tests'));
 $db = db_sqlite::open(array('database' => 'db/series.sqlite3'));
 
@@ -9,7 +11,7 @@ if ( !$db ) {
 }
 
 // Verify db schema
-$schema = require 'db-schema.php';
+$schema = require 'inc.db-schema.php';
 $db->schema($schema);
 
 // Ensure writable tmp folder
@@ -21,4 +23,6 @@ if ( !is_dir('tmp') || !is_writable('tmp') ) {
 mb_internal_encoding('UTF-8');
 header('Content-type: text/html; charset=utf-8');
 
+// Load config structure
+require 'inc.config.php';
 
