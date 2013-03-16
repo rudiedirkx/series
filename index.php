@@ -88,6 +88,8 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 				$existingShow = $db->select('series', array('deleted' => 0, 'name' => $insert['name']), null, 'Show')->first();
 				if ( $existingShow ) {
 					$update = array('name' => $insert['name'], 'tvdb_series_id' => $insert['tvdb_series_id']);
+					@$_POST['tvtorrents_show_id'] && $update['tvtorrents_show_id'] = @$_POST['tvtorrents_show_id'];
+					@$_POST['dailytvtorrents_name'] && $update['dailytvtorrents_name'] = @$_POST['dailytvtorrents_name'];
 					$db->update('series', $update, array('id' => $existingShow->id));
 				}
 				else {
@@ -437,6 +439,17 @@ echo $url2 . "\n";
 	exit;
 }
 
+$exists = false;
+if (@$adding_show_tvdb_result) {
+	$existingShow = $db->select('series', array('deleted' => 0, 'name' => $_POST['name']), null, 'Show')->first();
+	if ($existingShow) {
+		$exists = true;
+		if ($existingShow->tvdb_series_id && empty($_POST['tvdb_series_id'])) {
+			$_POST['tvdb_series_id'] = $existingShow->tvdb_series_id;
+		}
+	}
+}
+
 ?>
 <!doctype html>
 <html>
@@ -631,13 +644,23 @@ foreach ( $series AS $n => $show ) {
 		<legend>Add show <?=$n+2?></legend>
 		<p>Name: <input id="showname" type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
 		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?=(string)@$_POST['tvdb_series_id']?>" /></p>
+
+		<?if (@$existingShow):?>
+			<?if ($cfg->with_tvtorrents):?>
+				<p>TvTorrents id: <input type="search" name="tvtorrents_show_id" value="<?=$existingShow->tvtorrents_show_id?>" /></p>
+			<?endif?>
+			<?if ($cfg->with_dailytvtorrents):?>
+				<p>DailyTvTorrents name: <input type="search" name="dailytvtorrents_name" value="<?=$existingShow->dailytvtorrents_name?>" /></p>
+			<?endif?>
+		<?endif?>
+
 		<p><input type="submit" value="Next" /><p>
 
 		<?if (@$adding_show_tvdb_result):?>
 			<script>window.onload = function() { scrollTo(0, document.body.scrollHeight); };</script>
 
 			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
-			<p<?if (false === @$existingShow): ?> class="error"<? endif ?>><label><input type="checkbox" name="replace_existing" <? if (in_array(mb_strtolower(@$_POST['name']), $showNames)): ?>checked<? endif ?> /> Save The TVDB into existing show</label></p>
+			<p<?if (false === @$existingShow): ?> class="error"<? endif ?>><label><input type="checkbox" name="replace_existing" <? if ($exists): ?>checked<? endif ?> /> Save The TVDB into existing show</label></p>
 
 			<?if (!is_scalar($adding_show_tvdb_result)):?>
 				<div class="search-results">

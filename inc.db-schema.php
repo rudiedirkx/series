@@ -12,9 +12,11 @@ return array(
 		'o' => array('unsigned' => true),
 		'watching' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
 		'tvdb_series_id',
-		'data' => array('type' => 'text'),
+		'data',
 		'uptodate' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
-		'description' => array('type' => 'text'),
+		'description',
+		'tvtorrents_show_id',
+		'dailytvtorrents_name',
 	),
 	'seasons' => array(
 		'series_id' => array('unsigned' => true),
