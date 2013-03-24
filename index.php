@@ -491,7 +491,7 @@ tr.active .show-name { color: green; }
 td.seasons { text-align: center; }
 td.oc a { display: block; text-decoration: none; color: black; }
 td.oc a:hover { background-color: #ccc; }
-td.oc a.eligable, td.oc a.eligable:hover { background-color: #faa; color: #000; }
+td.oc a.eligible, td.oc a.eligible:hover { background-color: #faa; color: #000; }
 td.next a, td.missed a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
@@ -761,11 +761,32 @@ $('#series')
 	.on('contextmenu', '.next.oc a', function(e) {
 		e.preventDefault();
 		var $this = $(this);
-		$this.addClass('eligable');
+		$this.addClass('eligible');
+	})
+	.on('keydown', '.next.oc a', function(e) {
+		var $this = $(this),
+			space = e.which == 32,
+			up = e.which == 38,
+			down = e.which == 40;
+		if (space) {
+			e.preventDefault();
+			$this.toggleClass('eligible');
+		}
+		else if (up || down) {
+			if ( $this.hasClass('eligible') ) {
+				e.preventDefault();
+				var direction = up ? 1 : -1;
+				doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
+			}
+		}
+	})
+	.on('blur', '.next.oc a', function(e) {
+		var $this = $(this);
+		$this.removeClass('eligible');
 	})
 	.on('mouseleave', '.next.oc a', function(e) {
 		var $this = $(this);
-		$this.removeClass('eligable');
+		$this.removeClass('eligible');
 	})
 	.on('mousewheel DOMMouseScroll', '.next.oc a', function(e) {
 		var $this = $(this),
@@ -774,7 +795,7 @@ $('#series')
 		// the preventDefault to the top of this function, sometimes it does cancel
 		// the event (and sometimes it doesn't!?). Very strange behaviour that I can't
 		// seem to reproduce in http://jsfiddle.net/rudiedirkx/dDW63/show/ (always works).
-		if ( $this.hasClass('eligable') && direction ) {
+		if ( $this.hasClass('eligible') && direction ) {
 			e.preventDefault();
 			direction /= -Math.abs(direction);
 			doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
