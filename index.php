@@ -544,7 +544,7 @@ tr.hilite td {
 		<th></th>
 	<? endif ?>
 	<th class="tvdb"></th>
-	<th>Name <a href="javascript:$('#showname').focus();void(0);">+</a></th>
+	<th>Name <a href="javascript:$('showname').focus();void(0);">+</a></th>
 	<? if ($cfg->banners): ?>
 		<th class="picture"></th>
 	<? endif ?>
@@ -686,28 +686,29 @@ foreach ( $series AS $n => $show ) {
 <br />
 <br />
 
-<script src="jquery-1.7.2.min.js"></script>
+<script src="rjs-custom.js"></script>
 <script>
-$('a.tvdb-search-result').on('click', function(e) {
+$$('a.tvdb-search-result').on('click', function(e) {
 	e.preventDefault();
-	var $this = $(this),
-		id = $this.data('id');
-	$('#add_tvdb_series_id').val(id);
+	var id = this.data('id');
+	$('add_tvdb_series_id').value = id;
 });
 
-$('td.tvdb > a').on('click', function(e) {
+$$('td.tvdb > a').on('click', function(e) {
 	e.preventDefault();
-	$(this).children('img').attr('src', 'loading16.gif');
-	$.post(this.href, function(t) {
+console.log(this);
+	this.getChildren('img').attr('src', 'loading16.gif');
+	$.post(this.attr('href')).on('done', function(e) {
+		var t = this.responseText;
 		RorA(t);
 	});
 });
 
-$('tr[data-banner] .name').on('mouseover', function(e) {
-	var src = 'http://thetvdb.com/banners/' + $(this).closest('tr').data('banner');
-	$('#banner').attr('src', src).show();
+$$('tr[data-banner] .name').on('mouseover', function(e) {
+	var src = 'http://thetvdb.com/banners/' + this.firstAncestor('tr').data('banner');
+	$('banner').attr('src', src).show();
 }).on('mouseout', function(e) {
-	$('#banner').hide();
+	$('banner').hide();
 });
 
 function RorA(t, fn) {
@@ -721,15 +722,14 @@ function RorA(t, fn) {
 }
 
 function changeName(id, name) {
-	$.post('', 'id=' + id + '&name=' + encodeURIComponent(name), function(t) {
-		$('#show-name-' + id).html(t);
+	$.post('', 'id=' + id + '&name=' + encodeURIComponent(name)).on('done', function(e, t) {
+		$('show-name-' + id).setHTML(t);
 	});
 	return false;
 }
 
 function changeValue(o, id, n, v) {
-	var $o = $(o);
-	v == undefined && (v = $.trim($o.text()));
+	v == undefined && (v = o.getText().trim());
 	var nv = prompt('New value:', v);
 	if ( null === nv ) {
 		return false;
@@ -741,39 +741,35 @@ function changeValue(o, id, n, v) {
 }
 
 function doAndRespond(o, d) {
-	var $o = $(o);
-	$o.html('<img src="spinner.gif" />');
-	$.post('', d, function(rsp) {
-		if ( 'string' == typeof rsp ) {
-			$o.html(rsp);
+	o.setHTML('<img src="spinner.gif" />');
+	$.post('', d).on('done', function(e, rsp) {
+		if ( typeof rsp == 'string' ) {
+			return o.setHTML(rsp);
 		}
-		else {
-			$o.html(rsp.next_episode);
-			if ( rsp.season && rsp.episodes ) {
-				$o.attr('title', 'Season ' + rsp.season + ' has ' + rsp.episodes + ' episodes');
-			}
+
+		o.setHTML(rsp.next_episode);
+		if ( rsp.season && rsp.episodes ) {
+			o.attr('title', 'Season ' + rsp.season + ' has ' + rsp.episodes + ' episodes');
 		}
 	});
 	return false;
 }
 
-$('#series')
+$('series')
 	.on('contextmenu', '.next.oc a', function(e) {
 		e.preventDefault();
-		var $this = $(this);
-		$this.addClass('eligible');
+		this.addClass('eligible');
 	})
 	.on('keydown', '.next.oc a', function(e) {
-		var $this = $(this),
-			space = e.which == 32,
-			up = e.which == 38,
-			down = e.which == 40;
-		if (space) {
+		var space = e.key == Event.Keys.space,
+			up = e.key == Event.Keys.up,
+			down = e.key == Event.Keys.down;
+		if ( space ) {
 			e.preventDefault();
-			$this.toggleClass('eligible');
+			this.toggleClass('eligible');
 		}
-		else if (up || down) {
-			if ( $this.hasClass('eligible') ) {
+		else if ( up || down ) {
+			if ( this.hasClass('eligible') ) {
 				e.preventDefault();
 				var direction = up ? 1 : -1;
 				doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
@@ -781,41 +777,29 @@ $('#series')
 		}
 	})
 	.on('blur', '.next.oc a', function(e) {
-		var $this = $(this);
-		$this.removeClass('eligible');
+		this.removeClass('eligible');
 	})
 	.on('mouseleave', '.next.oc a', function(e) {
-		var $this = $(this);
-		$this.removeClass('eligible');
+		this.removeClass('eligible');
 	})
-	.on('mousewheel DOMMouseScroll', '.next.oc a', function(e) {
-		var $this = $(this),
-			direction = 'number' == typeof e.originalEvent.wheelDelta ? -e.originalEvent.wheelDelta : e.originalEvent.detail;
+	.on('mousewheel', '.next.oc a', function(e) {
+		var direction = 'number' == typeof e.originalEvent.wheelDelta ? -e.originalEvent.wheelDelta : e.originalEvent.detail;
 		// Firefox messes up here... It doesn't cancel the scroll event. If I move
 		// the preventDefault to the top of this function, sometimes it does cancel
 		// the event (and sometimes it doesn't!?). Very strange behaviour that I can't
 		// seem to reproduce in http://jsfiddle.net/rudiedirkx/dDW63/show/ (always works).
-		if ( $this.hasClass('eligible') && direction ) {
+		if ( this.hasClass('eligible') && direction ) {
 			e.preventDefault();
 			direction /= -Math.abs(direction);
-			doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
+			doAndRespond(this, 'id=' + this.firstAncestor('tr').attr('showid') + '&dir=' + direction);
 		}
 	});
-
-$.fn.update = function(attrs) {
-	if ( 'html' in attrs ) {
-		this.html(attrs.html);
-		delete attrs.html;
-	}
-
-	return this.attr(attrs);
-};
 </script>
 
 </body>
 
-<!-- <?= count($db->queries); ?> queries -->
-<!-- <? print_r($db->queries); ?> -->
+<!-- <?= count($db->queries) ?> queries -->
+<!-- <? print_r($db->queries) ?> -->
 
 </html>
 

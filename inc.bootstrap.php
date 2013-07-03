@@ -11,8 +11,8 @@ if ( !$db ) {
 }
 
 // Verify db schema
-$schema = require 'inc.db-schema.php';
-$db->schema($schema);
+// $schema = require 'inc.db-schema.php';
+// $db->schema($schema);
 
 // Ensure writable tmp folder
 if ( !is_dir('tmp') || !is_writable('tmp') ) {
