@@ -686,7 +686,7 @@ foreach ( $series AS $n => $show ) {
 <br />
 <br />
 
-<script src="rjs-custom.js"></script>
+<script src="rjs.js"></script>
 <script>
 $$('a.tvdb-search-result').on('click', function(e) {
 	e.preventDefault();
@@ -696,7 +696,6 @@ $$('a.tvdb-search-result').on('click', function(e) {
 
 $$('td.tvdb > a').on('click', function(e) {
 	e.preventDefault();
-console.log(this);
 	this.getChildren('img').attr('src', 'loading16.gif');
 	$.post(this.attr('href')).on('done', function(e) {
 		var t = this.responseText;
@@ -772,7 +771,7 @@ $('series')
 			if ( this.hasClass('eligible') ) {
 				e.preventDefault();
 				var direction = up ? 1 : -1;
-				doAndRespond($this, 'id=' + $this.closest('tr').attr('showid') + '&dir=' + direction);
+				doAndRespond(this, 'id=' + this.firstAncestor('tr').attr('showid') + '&dir=' + direction);
 			}
 		}
 	})
