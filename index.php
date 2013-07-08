@@ -607,7 +607,8 @@ foreach ( $series AS $n => $show ) {
 		}
 	}
 
-	if ( $hilited == $show->id ) {
+	$hilite = $hilited == $show->id;
+	if ( $hilite ) {
 		$classes[] = 'hilited';
 	}
 
@@ -627,7 +628,7 @@ foreach ( $series AS $n => $show ) {
 	}
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode) ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
-	echo "\t" . '<td class="seasons">' . ( ($show->active || $cfg->load_tvdb_inactive) && $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
+	echo "\t" . '<td class="seasons">' . ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && $show->seasons ? '<a title="Total episodes: ' . array_sum($show->seasons) . "\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="icon"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
 	echo "\t" . '<td class="icon">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
