@@ -587,15 +587,18 @@ foreach ( $series AS $n => $show ) {
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
 
+	$hilite = $hilited == $show->id;
+	if ( $hilite ) {
+		$classes[] = 'hilited';
+	}
+
 	$thisSeasonsEpisodes = $banner = '';
 	if ( $show->tvdb_series_id ) {
 		$classes[] = 'with-tvdb';
 
-		if ( ($show->active || $cfg->load_tvdb_inactive) && isset($show->seasons[$show->current_season]) ) {
+		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && !empty($show->seasons[$show->current_season]) ) {
 			$episodes = $show->seasons[$show->current_season];
-			if ( $episodes ) {
-				$thisSeasonsEpisodes = ' title="Season ' . (int)$show->current_season . ' has ' . $episodes . ' episodes"';
-			}
+			$thisSeasonsEpisodes = ' title="Season ' . (int)$show->current_season . ' has ' . $episodes . ' episodes"';
 		}
 
 		if ( $cfg->banners ) {
@@ -605,11 +608,6 @@ foreach ( $series AS $n => $show ) {
 				}
 			}
 		}
-	}
-
-	$hilite = $hilited == $show->id;
-	if ( $hilite ) {
-		$classes[] = 'hilited';
 	}
 
 	$title = '';
