@@ -638,7 +638,7 @@ $$('td.tvdb > a').on('click', function(e) {
 	});
 });
 
-$$('tr[data-banner] .name').on('mouseover', function(e) {
+$$('tr[data-banner] .show-banner').on('mouseover', function(e) {
 	var src = 'http://thetvdb.com/banners/' + this.firstAncestor('tr').data('banner');
 	$('banner').attr('src', src).show();
 }).on('mouseout', function(e) {
