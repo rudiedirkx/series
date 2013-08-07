@@ -7,8 +7,8 @@ class Config {
 			'type' => 'checkbox',
 			'default' => 1,
 		),
-		'sortable' => array(
-			'title' => 'Sortable list',
+		'async_inactive' => array(
+			'title' => 'Lazy/async load inactive shows',
 			'type' => 'checkbox',
 			'default' => 0,
 		),
