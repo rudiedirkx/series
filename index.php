@@ -21,9 +21,10 @@ require 'inc.bootstrap.php';
 
 // Define env vars
 define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+define('MOBILE', is_int(strpos(strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']), 'mobile')));
 
 // Get and reset highlighted show
-$hilited = (int)@$_COOKIE['series_hilited'];
+$hilited = (int)@$_GET['series_hilited'] ?: (int)@$_COOKIE['series_hilited'];
 if ( $hilited ) {
 	setcookie('series_hilited', '', 1);
 }
@@ -65,7 +66,6 @@ $cfg = new Config;
 /*echo '<pre>';
 print_r($var);
 var_dump($var->ass);
-var_dump($var->upload_label);
 print_r($var);
 echo '</pre>';*/
 
@@ -362,89 +362,6 @@ else if ( isset($_GET['inactive']) ) {
 	exit;
 }
 
-// parse .torrent to download subs
-else if ( isset($_FILES['torrent']) ) {
-	echo '<pre>';
-	print_r($_FILES['torrent']);
-
-	// must be a .torrent file
-	if ( preg_match('/\.torrent$/i', $_FILES['torrent']['name']) ) {
-		// must have the torrent mime type
-		if ( !isset($_FILES['torrent']['type']) || is_int(strpos($_FILES['torrent']['type'], 'torrent')) ) {
-			require_once '../tests/torrent/TorrentReader.php'; // https://github.com/rudiedirkx/Torrent-reader
-
-			// parse torrent
-			$torrent = TorrentReader::parse(file_get_contents($_FILES['torrent']['tmp_name']), $reader);
-
-			if ( $torrent ) {
-				$download = array('name' => '', 'episodes' => array());
-
-				// parse file names
-				foreach ( $torrent['info']['files'] AS $i => $file ) {
-					$filename = end($file['path']);
-
-					// get Season and Episode
-					if ( preg_match('/s(\d\d?)e(\d\d?)/i', $filename, $match) ) {
-						if ( !$download['name'] ) {
-							$download['name'] = strtr(substr($filename, 0, strpos($filename, $match[0])), array('.' => ' '));
-						}
-
-						array_shift($match);
-						list($S, $E) = array_map('intval', $match);
-
-						// get 'scene' (?)
-						if ( preg_match('/[\.\-]([^\.\-]+)\.[a-z0-9]+$/', $filename, $match) ) {
-							$scene = $match[1];
-							$download['episodes'][] = array(
-								'season' => $S,
-								'episode' => $E,
-								'scene' => $scene,
-							);
-						}
-					}
-				}
-//print_r($download);
-
-				// search for subtitles on $site
-				$site = 'http://www.podnapisi.net';
-				foreach ( $download['episodes'] AS $i => $episode ) {
-					if ( $i ) {
-//						sleep(1); // any reason?
-					}
-
-//echo "\n";
-//print_r($episode);
-					$q = array(
-						'sK' => $download['name'],
-						'sT' => 1, // Series, not movie
-						'sTE' => $episode['episode'],
-						'sTS' => $episode['season'],
-						'sR' => $episode['scene'],
-						'sJ' => 2, // English
-					);
-					$url1 = $site . '/en/ppodnapisi/search?' . http_build_query($q);
-					echo '<a href="'.$url1.'">'.$url1.'</a>' . "\n";
-/*echo $url1 . "\n";
-					$searchPage = file_get_contents($url1);
-					if ( preg_match('#href="(/[a-z]{2}/(?:[a-z0-9\-]+?)\-subtitles\-[a-z]\d+)"#i', $searchPage, $match) ) {
-						$url2 = $site . $match[1];
-echo $url2 . "\n";
-						$downloadPage = file_get_contents($url2);
-						if ( preg_match('#href="(/[a-z]{2}/ppodnapisi/download/i/\d+/k/[a-f0-9]+)"#i', $downloadPage, $match) ) {
-							$url3 = $site . $match[1];
-//var_dump($url3);
-							echo '<a href="'.$url3.'">'.$url3.'</a>' . "\n";
-						}
-					}*/
-
-					flush();
-				}
-			}
-		}
-	}
-	exit;
-}
-
 $exists = false;
 if (@$adding_show_tvdb_result) {
 	$existingShow = $db->select('series', array('deleted' => 0, 'name' => $_POST['name']), null, 'Show')->first();
@@ -504,12 +421,6 @@ tr.watching td { font-weight: bold; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
 td:not(.move) img { width: 16px; height: 16px; display: block; }
-<? if ($cfg->upload_label): ?>
-	label[for=torrent] { cursor: pointer; text-decoration: underline; color: blue; }
-	#torrent { position: absolute; left: -999px; }
-<? else: ?>
-	label[for=torrent] > span:after { content: ":"; }
-<? endif ?>
 td.move { cursor: move; }
 tr:target td,
 tr.hilite td {
@@ -533,15 +444,6 @@ tr.hilite td {
 <body>
 
 <img id="banner" />
-
-<form method=post action enctype="multipart/form-data">
-	<p>
-		<label tabindex="0" for="torrent">
-			<span>Upload .torrent to download subs</span>
-			<input type="file" name="torrent" id="torrent" onchange="this.form.submit();">
-		</label>
-	</p>
-</form>
 
 <table id="series">
 	<thead>
@@ -615,11 +517,11 @@ tr.hilite td {
 <script>
 <? if ($cfg->async_inactive): ?>
 	window.on('load', function() {
-		// setTimeout(function() {
-			$.get('?inactive=1').on('done', function(e, html) {
+		setTimeout(function() {
+			$.get('?inactive=1&series_hilited=<?= $hilited ?>').on('done', function(e, html) {
 				document.el('tbody').setHTML(html).inject($('series'));
 			});
-		// }, 1000);
+		}, 100);
 	});
 <? endif ?>
 
@@ -627,22 +529,6 @@ $$('a.tvdb-search-result').on('click', function(e) {
 	e.preventDefault();
 	var id = this.data('id');
 	$('add_tvdb_series_id').value = id;
-});
-
-$$('td.tvdb > a').on('click', function(e) {
-	e.preventDefault();
-	this.getChildren('img').attr('src', 'loading16.gif');
-	$.post(this.attr('href')).on('done', function(e) {
-		var t = this.responseText;
-		RorA(t);
-	});
-});
-
-$$('tr[data-banner] .show-banner').on('mouseover', function(e) {
-	var src = 'http://thetvdb.com/banners/' + this.firstAncestor('tr').data('banner');
-	$('banner').attr('src', src).show();
-}).on('mouseout', function(e) {
-	$('banner').hide();
 });
 
 function RorA(t, fn) {
@@ -727,7 +613,27 @@ $('series')
 			direction /= -Math.abs(direction);
 			doAndRespond(this, 'id=' + this.firstAncestor('tr').attr('showid') + '&dir=' + direction);
 		}
-	});
+	})
+	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {
+		var src = 'http://thetvdb.com/banners/' + this.firstAncestor('tr').data('banner');
+		$('banner').attr('src', src).show();
+
+		this.on('mouseout', this._onmouseout = function(e) {
+			$('banner').hide();
+
+			this.off('mouseout', this._onmouseout);
+		});
+	})
+	.on('click', 'td.tvdb > a', function(e) {
+		e.preventDefault();
+		this.getChildren('img').attr('src', 'loading16.gif');
+		$.post(this.attr('href')).on('done', function(e) {
+			var t = this.responseText;
+			RorA(t);
+		});
+	})
+;
+
 </script>
 
 </body>

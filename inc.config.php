@@ -2,11 +2,6 @@
 
 class Config {
 	static public $options = array(
-		'upload_label' => array(
-			'title' => 'Show upload label instead of file input',
-			'type' => 'checkbox',
-			'default' => 1,
-		),
 		'async_inactive' => array(
 			'title' => 'Lazy/async load inactive shows',
 			'type' => 'checkbox',
