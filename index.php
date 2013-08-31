@@ -61,13 +61,10 @@ class Show extends db_generic_record {
 	}
 }
 
-$cfg = new Config;
+$mobile = is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile'));
 
-/*echo '<pre>';
-print_r($var);
-var_dump($var->ass);
-print_r($var);
-echo '</pre>';*/
+$cfg = new Config;
+$async = $mobile && $cfg->async_inactive;
 
 
 
@@ -426,6 +423,14 @@ tr:target td,
 tr.hilite td {
 	background: lightblue;
 }
+.loading-more:not(.loading) {
+	opacity: 0.3;
+}
+.loading-more td {
+	padding: 10px;
+	text-align: center;
+	background: url(spinner.gif) no-repeat center center;
+}
 #banner { position: fixed; top: 10px; right: 10px; }
 @media (max-width: 1100px) {
 	#banner { display: none !important; }
@@ -515,13 +520,18 @@ tr.hilite td {
 
 <script src="rjs.js"></script>
 <script>
-<? if ($cfg->async_inactive): ?>
+<? if ($async): ?>
 	window.on('load', function() {
+		var $series = $('series');
+		document.el('tbody').attr('id', 'loading-more').addClass('loading-more').setHTML('<tr><td colspan="9">&nbsp;</td></tr>').inject($series);
+		var $loadingMore = $('loading-more');
 		setTimeout(function() {
+			$loadingMore.addClass('loading');
 			$.get('?inactive=1&series_hilited=<?= $hilited ?>').on('done', function(e, html) {
-				document.el('tbody').setHTML(html).inject($('series'));
+				$loadingMore.remove();
+				document.el('tbody').setHTML(html).inject($series);
 			});
-		}, 100);
+		}, 2000);
 	});
 <? endif ?>
 

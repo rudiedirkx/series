@@ -1,6 +1,6 @@
 <?php
 
-$lazyload = $cfg->async_inactive ? 'AND active = ' . (int)!isset($_GET['inactive']) : '';
+$lazyload = $async ? 'AND active = ' . (int)!isset($_GET['inactive']) : '';
 $watching = $cfg->watching_up_top ? '(watching > 0) DESC,' : '';
 $sortable = $cfg->sortable ? 'o ASC,' : '';
 
