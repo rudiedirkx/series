@@ -10,16 +10,18 @@ if ( isset($_POST['cfg']) ) {
 	foreach ( $_POST['options'] AS $name ) {
 		$value = @$_POST['cfg'][$name];
 
-		$el = Config::$options[$name];
+		$el = $options[$name];
 		$modifier = 'el_' . $el['type'] . '_value_post';
 
 		$values[$name] = $modifier($value, $el);
 	}
 
+	$db->begin();
 	$db->delete('variables', '1');
 	foreach ( $values AS $name => $value ) {
 		$db->insert('variables', compact('name', 'value'));
 	}
+	$db->commit();
 
 	header('Location: config.php');
 	exit;

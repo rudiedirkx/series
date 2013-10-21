@@ -3,7 +3,12 @@
 class Config {
 	static public $options = array(
 		'async_inactive' => array(
-			'title' => 'Lazy/async load inactive shows',
+			'title' => 'Lazy/async load inactive shows (on mobile)',
+			'type' => 'checkbox',
+			'default' => 0,
+		),
+		'dont_load_inactive' => array(
+			'title' => "DON'T load inactive shows (all devices)",
 			'type' => 'checkbox',
 			'default' => 0,
 		),

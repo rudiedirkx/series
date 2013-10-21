@@ -34,6 +34,7 @@ if ( $hilited ) {
 
 $cfg = new Config;
 $async = MOBILE && $cfg->async_inactive;
+$skip = $cfg->dont_load_inactive;
 
 
 
@@ -395,9 +396,12 @@ tr.hilite td {
 .loading-more:not(.loading) {
 	opacity: 0.3;
 }
-.loading-more td {
+#loading-more td,
+#load-more td {
 	padding: 10px;
 	text-align: center;
+}
+#loading-more td {
 	background: url(spinner.gif) no-repeat center center;
 }
 #banner { position: fixed; top: 10px; right: 10px; }
@@ -489,19 +493,32 @@ tr.hilite td {
 
 <script src="rjs.js"></script>
 <script>
-<? if ($async): ?>
-	window.on('load', function() {
+<? if ($async || $skip): ?>
+	function startLazyLoad(delay) {
 		var $series = $('series');
-		document.el('tbody').attr('id', 'loading-more').addClass('loading-more').setHTML('<tr><td colspan="9">&nbsp;</td></tr>').inject($series);
-		var $loadingMore = $('loading-more');
+		var $loadingMore = document.el('tbody').attr('id', 'loading-more').addClass('loading-more').setHTML('<tr><td colspan="9">&nbsp;</td></tr>').inject($series);
 		setTimeout(function() {
 			$loadingMore.addClass('loading');
 			$.get('?inactive=1&series_hilited=<?= $hilited ?>').on('done', function(e, html) {
 				$loadingMore.remove();
 				document.el('tbody').setHTML(html).inject($series);
 			});
-		}, 2000);
-	});
+		}, delay);
+	}
+	<? if ($skip): ?>
+		var $series = $('series');
+		var $loadMore = document.el('tbody').attr('id', 'load-more').addClass('load-more').setHTML('<tr><td colspan="9"><a href>Load the rest</a></td></tr>').inject($series);
+		$('#load-more a', 1).on('click', function(e) {
+			e.preventDefault();
+
+			$loadMore.remove();
+			startLazyLoad(0);
+		});
+	<? else: ?>
+		window.on('load', function(e) {
+			startLazyLoad(2000);
+		});
+	<? endif ?>
 <? endif ?>
 
 $$('a.tvdb-search-result').on('click', function(e) {
