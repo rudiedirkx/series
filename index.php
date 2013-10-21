@@ -22,7 +22,7 @@ require 'inc.show.php';
 
 // Define env vars
 define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
-define('MOBILE', is_int(strpos(strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']), 'mobile')));
+define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile')));
 
 // Get and reset highlighted show
 $hilited = (int)@$_GET['series_hilited'] ?: (int)@$_COOKIE['series_hilited'];
@@ -32,10 +32,8 @@ if ( $hilited ) {
 
 
 
-$mobile = is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile'));
-
 $cfg = new Config;
-$async = $mobile && $cfg->async_inactive;
+$async = MOBILE && $cfg->async_inactive;
 
 
 
