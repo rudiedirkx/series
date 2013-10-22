@@ -459,7 +459,7 @@ tr.hilite td {
 			<?endif?>
 		<?endif?>
 
-		<p><input type="submit" value="Next" /><p>
+		<p><input type="submit" value="<?= @$adding_show_tvdb_result ? 'Save' : 'Next' ?>" /><p>
 
 		<?if (@$adding_show_tvdb_result):?>
 			<script>window.onload = function() { scrollTo(0, document.body.scrollHeight); };</script>
