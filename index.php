@@ -503,16 +503,16 @@ tr.hilite td {
 				$loadingMore.remove();
 				document.el('tbody').setHTML(html).inject($series);
 			});
-		}, delay);
+		}, delay || 1);
 	}
 	<? if ($skip): ?>
 		var $series = $('series');
 		var $loadMore = document.el('tbody').attr('id', 'load-more').addClass('load-more').setHTML('<tr><td colspan="9"><a href>Load the rest</a></td></tr>').inject($series);
-		$('#load-more a', 1).on('click', function(e) {
+		$loadMore.getElement('a').on('click', function(e) {
 			e.preventDefault();
 
 			$loadMore.remove();
-			startLazyLoad(0);
+			startLazyLoad();
 		});
 	<? else: ?>
 		window.on('load', function(e) {
