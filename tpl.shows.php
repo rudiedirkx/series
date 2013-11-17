@@ -26,9 +26,19 @@ catch ( db_exception $ex ) {
 }
 
 $showNames = array();
-$n = -1;
+$_active = true;
 foreach ( $series AS $n => $show ) {
 	$showNames[] = mb_strtolower($show->name);
+
+	if ( !$lazyload && $_active != (bool)$show->active ) {
+		$_active = (bool)$show->active;
+
+		echo '</tbody>';
+		if ( $cfg->search_inactives ) {
+			require 'tpl.search.php';
+		}
+		echo '<tbody id="shows-inactive">';
+	}
 
 	$classes = array();
 	$show->active && $classes[] = 'active';

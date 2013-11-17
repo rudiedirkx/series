@@ -2,6 +2,11 @@
 
 class Config {
 	static public $options = array(
+		'search_inactives' => array(
+			'title' => 'Direct-search through inactive shows with JS',
+			'type' => 'checkbox',
+			'default' => 0,
+		),
 		'async_inactive' => array(
 			'title' => 'Lazy/async load inactive shows (on mobile)',
 			'type' => 'checkbox',
