@@ -638,11 +638,15 @@ $('series')
 	})
 	.on('keydown', '.next.oc a', function(e) {
 		var space = e.key == Event.Keys.space,
+			esc = e.key == Event.Keys.esc,
 			up = e.key == Event.Keys.up,
 			down = e.key == Event.Keys.down;
 		if ( space ) {
 			e.preventDefault();
 			this.toggleClass('eligible');
+		}
+		else if ( esc ) {
+			this.removeClass('eligible');
 		}
 		else if ( up || down ) {
 			if ( this.hasClass('eligible') ) {
