@@ -1,6 +1,7 @@
 <?php
 
 define('TVDB_API_KEY', '94F0BD0D5948FE69');
+define('TVDB_DVD_OVER_TV', true);
 
 ## tvdb
 # get mirror
@@ -70,16 +71,19 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 
 		if ( $insert ) {
 			$db->insert('series', $insert);
+			$id = $db->insert_id();
 		}
 
 		if ( empty($noredirect) ) {
-			header('Location: ./');
-			exit;
+			exit('OK' . $id);
 		}
 	}
 	else {
 		$adding_show_tvdb_result = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($_POST['name']));
 	}
+
+	require 'tpl.add-show.php';
+	exit;
 }
 
 // Change show order
@@ -274,8 +278,17 @@ else if ( isset($_GET['updateshow']) ) {
 			// get seasons
 			$seasons = array();
 			foreach ( $xml->Episode AS $episode ) {
-				$S = (int)(string)$episode->SeasonNumber;
-				$E = (int)(string)$episode->EpisodeNumber;
+				// TV airings might have different episode/season numbers than DVD productions, so the number
+				// of episodes in a season depends on this constant, which should be a Config var.
+				if ( TVDB_DVD_OVER_TV ) {
+					$S = (int)(string)$episode->Combined_season;
+					$E = (int)(string)$episode->Combined_episodenumber;
+				}
+				else {
+					$S = (int)(string)$episode->SeasonNumber;
+					$E = (int)(string)$episode->EpisodeNumber;
+				}
+
 				if ( $S && $E ) {
 					if ( !isset($seasons[$S]) ) {
 						$seasons[$S] = $E;
@@ -343,93 +356,13 @@ if (@$adding_show_tvdb_result) {
 ?>
 <!doctype html>
 <html>
-<head>
-<meta charset="utf-8" />
-<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Series</title>
-<style>
-::-webkit-scrollbar {
-	background: #f7f7f7;
-	width: 30px;
-}
-::-webkit-scrollbar:hover {
-	background: #ddd;
-}
-::-webkit-scrollbar-thumb {
-	background: #aaa;
-	border-radius: 15px;
-}
-:hover ::-webkit-scrollbar-thumb {
-	background: #888;
-}
 
-* { box-sizing: border-box; }
-body, table { font-family: Verdana, Arial, sans-serif; font-size: 14px; border-collapse: separate; border-spacing: 0; }
-a { color: blue; }
-a img { border: 0; }
-.error { color: red; }
-table { border: solid 1px #000; }
-table.loading { opacity: 0.5; }
-tbody tr { background-color: #eee; }
-tbody tr:nth-child(even) { background-color: #ddd; }
-tbody tr.hilited td { background-color: lightblue; }
-td, th { border: solid 1px #fff; vertical-align: middle; }
-a { text-decoration: none; }
-a[href] { text-decoration: underline; }
-.name .show-name { color: red; }
-tr.active .show-name { color: green; }
-td.seasons { text-align: center; }
-td.oc a { display: block; text-decoration: none; color: black; }
-td.oc a:hover { background-color: #ccc; }
-td.oc a.eligible, td.oc a.eligible:hover { background-color: #faa; color: #000; }
-td.next a, td.missed a { color: #888; }
-tr.hd th { padding: 4px; }
-tr.watching td { font-weight: bold; }
-td.icon { padding-right: 4px; padding-left: 4px; }
-tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
-td:not(.move) img { width: 16px; height: 16px; display: block; }
-td.move { cursor: move; }
-tr:target td,
-tr.hilite td {
-	background: lightblue;
-}
-.loading-more:not(.loading) {
-	opacity: 0.3;
-}
-#loading-more td,
-#load-more td {
-	padding: 10px;
-	text-align: center;
-}
-#loading-more td {
-	background: url(spinner.gif) no-repeat center center;
-}
-body:not(.show-all) #tb-search {
-	display: none;
-}
-#tb-search {
-	text-align: center;
-}
-#search {
-	width: 100%;
-}
-tr.filtered-out {
-	display: none;
-}
-#banner { position: fixed; top: 10px; right: 10px; }
-@media (max-width: 1100px) {
-	#banner { display: none !important; }
-}
-@media (max-width: 400px) {
-	tr > .tvdb,
-	span.edit-title,
-	tr > .missed,
-	tr > .icon {
-		display: none;
-	}
-}
-</style>
+<head>
+	<meta charset="utf-8" />
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Series</title>
+	<style><?php require 'series.css' ?></style>
 </head>
 
 <body>
@@ -458,56 +391,12 @@ tr.filtered-out {
 	<? endif ?>
 </table>
 
-<br />
-
-<form method="post" action style="padding-top: 10px;">
-	<fieldset style="display: inline-block;">
-		<legend>Add show <?=$n+2?></legend>
-		<p>Name: <input id="showname" type="search" name="name" value="<?=(string)@$_POST['name']?>" /></p>
-		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?=(string)@$_POST['tvdb_series_id']?>" /></p>
-
-		<?if (@$existingShow):?>
-			<?if ($cfg->with_tvtorrents):?>
-				<p>TvTorrents id: <input type="search" name="tvtorrents_show_id" value="<?=$existingShow->tvtorrents_show_id?>" /></p>
-			<?endif?>
-			<?if ($cfg->with_dailytvtorrents):?>
-				<p>DailyTvTorrents name: <input type="search" name="dailytvtorrents_name" value="<?=$existingShow->dailytvtorrents_name?>" /></p>
-			<?endif?>
-		<?endif?>
-
-		<p><input type="submit" value="<?= @$adding_show_tvdb_result ? 'Save' : 'Next' ?>" /><p>
-
-		<?if (@$adding_show_tvdb_result):?>
-			<script>window.onload = function() { scrollTo(0, document.body.scrollHeight); };</script>
-
-			<p><label><input type="checkbox" name="dont_connect_tvdb" /> Don't connect to The TVDB</label></p>
-			<p<?if (false === @$existingShow): ?> class="error"<? endif ?>><label><input type="checkbox" name="replace_existing" <? if ($exists): ?>checked<? endif ?> /> Save The TVDB into existing show</label></p>
-
-			<?if (!is_scalar($adding_show_tvdb_result)):?>
-				<div class="search-results">
-					<ul>
-						<?foreach ($adding_show_tvdb_result->Series AS $show):?>
-							<li>
-								<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
-								<!--
-									(<?=$show->banner?>)
-									<img src="http://www.thetvdb.com/banners/graphical/<?=$show->seriesid?>-g.jpg" alt="banner" />
-								-->
-								(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
-								<div class="tvdb-search-result-description"><?=html($show->Overview)?></div>
-							</li>
-						<?endforeach?>
-					</ul>
-				</div>
-			<?endif?>
-		<?endif?>
-	</fieldset>
-</form>
-
-<br />
-<br />
-
 <script src="rjs.js"></script>
+
+<div id="add-show-wrapper">
+	<?php require 'tpl.add-show.php' ?>
+</div>
+
 <script>
 <? if ($async || $skip): ?>
 	function startLazyLoad(delay) {
@@ -539,12 +428,6 @@ tr.filtered-out {
 <? else: ?>
 	document.body.addClass('show-all');
 <? endif ?>
-
-$$('a.tvdb-search-result').on('click', function(e) {
-	e.preventDefault();
-	var id = this.data('id');
-	$('add_tvdb_series_id').value = id;
-});
 
 function RorA(t, fn) {
 	fn || (fn = function() {
@@ -652,7 +535,7 @@ $('series')
 			if ( this.hasClass('eligible') ) {
 				e.preventDefault();
 				var direction = up ? 1 : -1;
-				doAndRespond(this, 'id=' + this.firstAncestor('tr').attr('showid') + '&dir=' + direction);
+				doAndRespond(this, 'id=' + this.ancestor('tr').attr('showid') + '&dir=' + direction);
 			}
 		}
 	})
@@ -671,11 +554,11 @@ $('series')
 		if ( this.hasClass('eligible') && direction ) {
 			e.preventDefault();
 			direction /= -Math.abs(direction);
-			doAndRespond(this, 'id=' + this.firstAncestor('tr').attr('showid') + '&dir=' + direction);
+			doAndRespond(this, 'id=' + this.ancestor('tr').attr('showid') + '&dir=' + direction);
 		}
 	})
 	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {
-		var src = 'http://thetvdb.com/banners/' + this.firstAncestor('tr').data('banner');
+		var src = 'http://thetvdb.com/banners/' + this.ancestor('tr').data('banner');
 		$('banner').attr('src', src).show();
 
 		this.on('mouseout', this._onmouseout = function(e) {
@@ -693,7 +576,6 @@ $('series')
 		});
 	})
 ;
-
 </script>
 
 </body>

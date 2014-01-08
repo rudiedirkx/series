@@ -1,0 +1,84 @@
+
+::-webkit-scrollbar {
+	background: #f7f7f7;
+	width: 30px;
+}
+::-webkit-scrollbar:hover {
+	background: #ddd;
+}
+::-webkit-scrollbar-thumb {
+	background: #aaa;
+	border-radius: 15px;
+}
+:hover ::-webkit-scrollbar-thumb {
+	background: #888;
+}
+
+* { box-sizing: border-box; }
+body, table { font-family: Verdana, Arial, sans-serif; font-size: 14px; border-collapse: separate; border-spacing: 0; }
+a { color: blue; }
+a img { border: 0; }
+.error { color: red; }
+table { border: solid 1px #000; }
+table.loading { opacity: 0.5; }
+tbody tr { background-color: #eee; }
+tbody tr:nth-child(even) { background-color: #ddd; }
+tbody tr.hilited td { background-color: lightblue; }
+td, th { border: solid 1px #fff; vertical-align: middle; }
+a { text-decoration: none; }
+a[href] { text-decoration: underline; }
+.name .show-name { color: red; }
+tr.active .show-name { color: green; }
+td.seasons { text-align: center; }
+td.oc a { display: block; text-decoration: none; color: black; }
+td.oc a:hover { background-color: #ccc; }
+td.oc a.eligible, td.oc a.eligible:hover { background-color: #faa; color: #000; }
+td.next a, td.missed a { color: #888; }
+tr.hd th { padding: 4px; }
+tr.watching td { font-weight: bold; }
+td.icon { padding-right: 4px; padding-left: 4px; }
+tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
+td:not(.move) img { width: 16px; height: 16px; display: block; }
+td.move { cursor: move; }
+tr:target td,
+tr.hilite td {
+	background: lightblue;
+}
+.loading-more:not(.loading) {
+	opacity: 0.3;
+}
+#loading-more td,
+#load-more td {
+	padding: 10px;
+	text-align: center;
+}
+#loading-more td {
+	background: url(spinner.gif) no-repeat center center;
+}
+body:not(.show-all) #tb-search {
+	display: none;
+}
+#tb-search {
+	text-align: center;
+}
+#search {
+	width: 100%;
+}
+tr.filtered-out {
+	display: none;
+}
+#banner { position: fixed; top: 10px; right: 10px; }
+#add-show-wrapper {
+	padding: 20px 0;
+}
+@media (max-width: 1100px) {
+	#banner { display: none !important; }
+}
+@media (max-width: 400px) {
+	tr > .tvdb,
+	span.edit-title,
+	tr > .missed,
+	tr > .icon {
+		display: none;
+	}
+}
