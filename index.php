@@ -487,7 +487,7 @@ function doAndRespond(o, d) {
 		.on('search', function(e) {
 			if ( !trs ) {
 				trs = new Elements($('shows-inactive').rows);
-				trs.each(function(tr) {
+				trs.forEach(function(tr) {
 					var span = tr.getElement('.show-name');
 					tr._txt = (span.textContent + ' ' + (span.title || '')).toLowerCase();
 				});
@@ -498,7 +498,7 @@ function doAndRespond(o, d) {
 				trs.removeClass('filtered-out');
 			}
 			else {
-				trs.each(function(tr) {
+				trs.forEach(function(tr) {
 					var match = tr._txt.indexOf(q) != -1,
 						method = match ? 'removeClass' : 'addClass';
 					tr[method]('filtered-out');
