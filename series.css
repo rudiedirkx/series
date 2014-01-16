@@ -1,14 +1,14 @@
 
 ::-webkit-scrollbar {
-	background: #f7f7f7;
+	background: #eee;
 	width: 30px;
 }
 ::-webkit-scrollbar:hover {
 	background: #ddd;
 }
 ::-webkit-scrollbar-thumb {
-	background: #aaa;
-	border-radius: 15px;
+	background: #ccc;
+	border-radius: 4px;
 }
 :hover ::-webkit-scrollbar-thumb {
 	background: #888;
