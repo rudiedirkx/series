@@ -17,6 +17,8 @@ return array(
 		'description',
 		'tvtorrents_show_id',
 		'dailytvtorrents_name',
+		'created' => array('null' => false, 'unsigned' => true, 'default' => 0),
+		'changed' => array('null' => false, 'unsigned' => true, 'default' => 0),
 	),
 	'seasons' => array(
 		'series_id' => array('unsigned' => true),

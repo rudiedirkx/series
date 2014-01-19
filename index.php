@@ -46,6 +46,7 @@ if ( isset($_POST['name']) && !isset($_POST['id']) ) {
 		'deleted' => 0,
 		'active' => 1,
 		'watching' => 0,
+		'created' => time(),
 	);
 
 	if ( !empty($_POST['dont_connect_tvdb']) || !empty($_POST['tvdb_series_id']) ) {
@@ -140,7 +141,8 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 		// Save
 		$ne = implode('.', $parts);
-		$db->update('series', array('next_episode' => $ne), array('id' => $show->id));
+		$update = array('next_episode' => $ne, 'changed' => time());
+		$db->update('series', $update, array('id' => $show->id));
 
 		// respond
 		header('Content-type: text/json');
@@ -156,21 +158,21 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 // Edit field: next
 else if ( isset($_POST['id'], $_POST['next_episode']) ) {
-	$db->update('series', array('next_episode' => $_POST['next_episode']), array('id' => $_POST['id']));
+	$db->update('series', array('next_episode' => $_POST['next_episode'], 'changed' => time()), array('id' => $_POST['id']));
 
 	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
 }
 
 // Edit field: missed
 else if ( isset($_POST['id'], $_POST['missed']) ) {
-	$db->update('series', array('missed' => $_POST['missed']), array('id' => $_POST['id']));
+	$db->update('series', array('missed' => $_POST['missed'], 'changed' => time()), array('id' => $_POST['id']));
 
 	exit($db->select_one('series', 'missed', array('id' => $_POST['id'])));
 }
 
 // Edit field: name
 else if ( isset($_POST['id'], $_POST['name']) ) {
-	$db->update('series', array('name' => $_POST['name']), array('id' => $_POST['id']));
+	$db->update('series', array('name' => $_POST['name'], 'changed' => time()), array('id' => $_POST['id']));
 
 	exit($db->select_one('series', 'name', array('id' => $_POST['id'])));
 }
@@ -179,8 +181,10 @@ else if ( isset($_POST['id'], $_POST['name']) ) {
 else if ( isset($_GET['id'], $_GET['active']) ) {
 	$active = (bool)$_GET['active'];
 
-	$update = array('active' => $active);
-	!$active && $update['watching'] = false;
+	$update = array('active' => $active, 'changed' => time());
+	if ( !$active ) {
+		$update['watching'] = false;
+	}
 
 	$db->update('series', $update, array('id' => $_GET['id']));
 
@@ -246,6 +250,7 @@ else if ( isset($_GET['updateshow']) ) {
 						'name' => $Series['SeriesName'],
 						'tvdb_series_id' => $Series['seriesid'],
 						'data' => json_encode($Series),
+						'changed' => time(),
 					), array('id' => $id));
 
 					$show->tvdb_series_id = $Series['seriesid'];
@@ -273,6 +278,7 @@ else if ( isset($_GET['updateshow']) ) {
 			$db->update('series', array(
 				'description' => $data['Overview'],
 				'data' => json_encode($data),
+				'changed' => time(),
 			), array('id' => $id));
 
 			// get seasons
@@ -330,7 +336,7 @@ else if ( isset($_GET['resetshow']) ) {
 	$db->delete('seasons', array('series_id' => $_GET['resetshow']));
 
 	// delete tvdb series id
-	$db->update('series', array('tvdb_series_id' => 0), array('id' => $_GET['resetshow']));
+	$db->update('series', array('tvdb_series_id' => 0, 'changed' => time()), array('id' => $_GET['resetshow']));
 
 	header('Location: ./');
 	exit;
