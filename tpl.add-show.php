@@ -27,7 +27,7 @@
 					<ul>
 						<?foreach ($adding_show_tvdb_result->Series AS $show):?>
 							<li>
-								<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
+								<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" data-name="<?=html($show->SeriesName)?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
 								(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
 								<div class="tvdb-search-result-description"><?=html($show->Overview)?></div>
 							</li>
@@ -61,7 +61,9 @@ $('add-show').on('submit', function(e) {
 
 $$('a.tvdb-search-result').on('click', function(e) {
 	e.preventDefault();
-	var id = this.data('id');
+	var id = this.data('id'),
+		name = this.data('name');
+	$('showname').value = name;
 	$('add_tvdb_series_id').value = id;
 });
 </script>
