@@ -60,7 +60,7 @@ foreach ( $series AS $n => $show ) {
 
 		if ( $cfg->banners ) {
 			if ( $data = @json_decode($show->data) ) {
-				if ( @$data->banner ) {
+				if ( @$data->banner && is_string($data->banner) ) {
 					$banner = 'data-banner="' . html($data->banner) . '"';
 				}
 			}
