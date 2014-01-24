@@ -1,4 +1,4 @@
-// build.html#-json_alias,-ifsetor,-array,-class,-serialize,-copy,-getter,-array_invoke,-array_unique,-array_each,-array_intersect,-array_diff,-string_camel,-string_repeat,-_classlist,-asset_js,-coords2d,-coords2d_add,-coords2d_subtract,-coords2d_tocss,-coords2d_join,-coords2d_equal,-anyevent_lmrclick,-anyevent_touches,-anyevent_pagexy,-anyevent_summary,-anyevent_subject,-event_keys,-_event_custom_mousenterleave,-event_custom_mousewheel,-event_custom_directchange,-native_extend,-eventable_globalfire,-element_siblings,-element_index,-element_attr2method,-element_attr2method_html,-element_attr2method_text,-element_prop,-element_value,-element_toquerystring,-element_empty,-element_position,-element_scroll,-windoc_scroll,-xhr_global
+// build.html#-json_alias,-ifsetor,-array,-class,-serialize,-copy,-getter,-array_invoke,-array_unique,-array_each,-array_intersect,-array_diff,-string_camel,-string_repeat,-_classlist,-asset_js,-coords2d,-coords2d_add,-coords2d_subtract,-coords2d_tocss,-coords2d_join,-coords2d_equal,-anyevent_lmrclick,-anyevent_touches,-anyevent_pagexy,-anyevent_summary,-anyevent_subject,-_event_custom_mousenterleave,-event_custom_mousewheel,-event_custom_directchange,-native_extend,-eventable_globalfire,-element_siblings,-element_index,-element_attr2method,-element_attr2method_html,-element_attr2method_text,-element_prop,-element_value,-element_toquerystring,-element_empty,-element_position,-element_scroll,-windoc_scroll,-xhr_global
 
 (function(W, D) {
 
@@ -159,6 +159,7 @@
 		}
 
 	});
+	Event.Keys = {enter: 13, up: 38, down: 40, left: 37, right: 39, esc: 27, space: 32, backspace: 8, tab: 9, delete: 46};
 	Event.Custom = {
 	};
 
