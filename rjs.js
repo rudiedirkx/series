@@ -1,4 +1,4 @@
-// build.html#-json_alias,-ifsetor,-array,-class,-serialize,-copy,-getter,-array_invoke,-array_unique,-array_each,-array_intersect,-array_diff,-string_camel,-string_repeat,-_classlist,-asset_js,-coords2d,-coords2d_add,-coords2d_subtract,-coords2d_tocss,-coords2d_join,-coords2d_equal,-anyevent_lmrclick,-anyevent_touches,-anyevent_pagexy,-anyevent_summary,-anyevent_subject,-_event_custom_mousenterleave,-event_custom_mousewheel,-event_custom_directchange,-native_extend,-eventable_globalfire,-element_siblings,-element_index,-element_attr2method,-element_attr2method_html,-element_attr2method_text,-element_prop,-element_value,-element_toquerystring,-element_empty,-element_position,-element_scroll,-windoc_scroll,-xhr_global
+// build.html#-json_alias,-ifsetor,-array,-class,-serialize,-copy,-array_invoke,-array_unique,-array_each,-array_intersect,-array_diff,-string_camel,-string_repeat,-asset_js,-coords2d,-coords2d_add,-coords2d_subtract,-coords2d_tocss,-coords2d_join,-coords2d_equal,-anyevent_lmrclick,-anyevent_touches,-anyevent_pagexy,-anyevent_summary,-anyevent_subject,-_event_custom_mousenterleave,-event_custom_mousewheel,-event_custom_directchange,-native_extend,-eventable_globalfire,-element_siblings,-element_index,-element_attr2method,-element_attr2method_html,-element_attr2method_text,-element_prop,-element_value,-element_toquerystring,-element_empty,-element_position,-element_scroll,-windoc_scroll,-xhr_global
 
 (function(W, D) {
 
@@ -69,6 +69,9 @@
 		});
 	};
 
+	r.getter = function(Host, prop, getter) {
+		Object.defineProperty(Host.prototype, prop, {get: getter});
+	};
 	r.extend(Array, {
 		contains: function(obj) {
 			return this.indexOf(obj) != -1;
@@ -85,6 +88,60 @@
 	};
 	var indexOf = [].indexOf;
 
+	if (!('classList' in html)) {
+		var push = [].push;
+		W.DOMTokenList = function DOMTokenList(el) {
+			this._el = el;
+			el.$classList = this;
+			this._reinit();
+		}
+		r.extend(W.DOMTokenList, {
+			_reinit: function() {
+				this.length = 0;
+
+				var classes = this._el.className.trim();
+				classes = classes ? classes.split(/\s+/g) : [];
+				for ( var i=0, L=classes.length; i<L; i++ ) {
+					push.call(this, classes[i]);
+				}
+
+				return this;
+			},
+			set: function() {
+				this._el.className = [].join.call(this, ' ');
+			},
+			add: function(token) {
+				if ( !this.contains(token) ) {
+					push.call(this, token);
+					this.set();
+				}
+			},
+			contains: function(token) {
+				return indexOf.call(this, token) !== -1;
+			},
+			item: function(index) {
+				return this[index] || null;
+			},
+			remove: function(token) {
+				var i = indexOf.call(this, token);
+				if ( i != -1 ) {
+					[].splice.call(this, i, 1);
+					this.set();
+				}
+			},
+			toggle: function(token) {
+				if ( this.contains(token) ) {
+					return !!this.remove(token);
+				}
+
+				return !this.add(token);
+			}
+		});
+
+		r.getter(Element, 'classList', function() {
+			return this.$classList ? this.$classList._reinit() : new W.DOMTokenList(this);
+		});
+	}
 	function Elements(source, selector) {
 		this.length = 0;
 		source && r.each(source, function(el, i) {
