@@ -22,7 +22,20 @@ class Show extends db_generic_record {
 
 	public function get_seasons() {
 		global $db;
-		return $db->select_fields('seasons', 'season, episodes', array('series_id' => $this->id));
+		return $db->select_by_field('seasons', 'season', array('series_id' => $this->id))->all();
+	}
+
+	public function get_season() {
+		$seasons = $this->seasons; // Don't error suppress, because of __get magic
+		return @$seasons[$this->current_season]; // No magic here, so do error suppress
+	}
+
+	public function get_total_episodes() {
+		$episodes = 0;
+		foreach ( $this->seasons as $season ) {
+			$episodes += $season->episodes;
+		}
+		return $episodes;
 	}
 
 	public function get_num_seasons() {

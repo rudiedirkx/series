@@ -24,6 +24,8 @@ return array(
 		'series_id' => array('unsigned' => true),
 		'season' => array('unsigned' => true),
 		'episodes' => array('unsigned' => true),
+		'runs_from' => array('type' => 'date'),
+		'runs_to' => array('type' => 'date'),
 	),
 	'variables' => array(
 		'name',

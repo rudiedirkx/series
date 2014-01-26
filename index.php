@@ -33,7 +33,6 @@ if ( $hilited ) {
 
 
 
-$cfg = new Config;
 $async = MOBILE && $cfg->async_inactive;
 $skip = $cfg->dont_load_inactive;
 
@@ -123,11 +122,11 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 			if ( $E < 1 && $S > 1 ) {
 				if ( isset($show->seasons[$S-1]) ) {
 					$S -= 1;
-					$E = $show->seasons[$S];
+					$E = $show->seasons[$S]->episodes;
 				}
 			}
 			// Moving up
-			else if ( isset($show->seasons[$S]) && $E > $show->seasons[$S] ) {
+			else if ( isset($show->seasons[$S]) && $E > $show->seasons[$S]->episodes ) {
 				$S += 1;
 				$E = 1;
 			}
@@ -282,7 +281,7 @@ else if ( isset($_GET['updateshow']) ) {
 			), array('id' => $id));
 
 			// get seasons
-			$seasons = array();
+			$seasons = $runsFrom = $runsTo = array();
 			foreach ( $xml->Episode AS $episode ) {
 				// TV airings might have different episode/season numbers than DVD productions, so the number
 				// of episodes in a season depends on this constant, which should be a Config var.
@@ -296,12 +295,13 @@ else if ( isset($_GET['updateshow']) ) {
 				}
 
 				if ( $S && $E ) {
-					if ( !isset($seasons[$S]) ) {
-						$seasons[$S] = $E;
-					}
-					else {
-						$seasons[$S] = max($seasons[$S], $E);
-					}
+					$seasons[$S] = isset($seasons[$S]) ? max($seasons[$S], $E) : $E;
+
+					$aired = (string)$episode->FirstAired;
+					$date = date('Y-m-d', is_numeric($aired) ? $aired : strtotime($aired));
+
+					$runsFrom[$S] = isset($runsFrom[$S]) ? min($runsFrom[$S], $date) : $date;
+					$runsTo[$S] = isset($runsTo[$S]) ? max($runsTo[$S], $date) : $date;
 				}
 			}
 
@@ -313,6 +313,8 @@ else if ( isset($_GET['updateshow']) ) {
 					'series_id' => $show->id,
 					'season' => $S,
 					'episodes' => $E,
+					'runs_from' => $runsFrom[$S],
+					'runs_to' => $runsTo[$S],
 				));
 			}
 			$db->commit();
