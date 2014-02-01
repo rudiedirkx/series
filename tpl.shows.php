@@ -1,6 +1,6 @@
 <?php
 
-$lazyload = $async || $skip ? 'AND active = ' . (int)!isset($_GET['inactive']) : '';
+$lazyload = $async || $skip ? 'active = ' . (int)!isset($_GET['inactive']) : '1';
 $watching = $cfg->watching_up_top ? '(watching > 0) DESC,' : '';
 $sortable = $cfg->sortable ? 'o ASC,' : '';
 
@@ -11,7 +11,7 @@ try {
 		FROM
 			series
 		WHERE
-			deleted = 0 ' . $lazyload . '
+			deleted = 0 AND (' . $lazyload . ' OR id = ' . (int)$hilited . ')
 		GROUP BY
 			id
 		ORDER BY
