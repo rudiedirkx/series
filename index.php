@@ -39,51 +39,38 @@ $skip = $cfg->dont_load_inactive;
 
 
 // New show
-if ( isset($_POST['name']) && !isset($_POST['id']) ) {
+if ( isset($_POST['name'], $_POST['tvdb_series_id']) && !isset($_POST['id']) ) {
+	$action = @$_POST['_action'] ?: 'search';
+
+	$name = trim($_POST['name']);
+	if ( !$name ) {
+		$action = 'search';
+	}
+
 	$insert = array(
-		'name' => $_POST['name'],
+		'name' => $name,
+		'tvdb_series_id' => $_POST['tvdb_series_id'],
 		'deleted' => 0,
 		'active' => 1,
 		'watching' => 0,
 		'created' => time(),
 	);
 
-	if ( !empty($_POST['dont_connect_tvdb']) || !empty($_POST['tvdb_series_id']) ) {
-		if ( !empty($_POST['tvdb_series_id']) ) {
-			$insert['tvdb_series_id'] = $_POST['tvdb_series_id'];
-
-			if ( !empty($_POST['replace_existing']) ) {
-				$existingShow = $db->select('series', array('deleted' => 0, 'name' => $insert['name']), null, 'Show')->first();
-				if ( $existingShow ) {
-					$update = array('name' => $insert['name'], 'tvdb_series_id' => $insert['tvdb_series_id']);
-					@$_POST['tvtorrents_show_id'] && $update['tvtorrents_show_id'] = @$_POST['tvtorrents_show_id'];
-					@$_POST['dailytvtorrents_name'] && $update['dailytvtorrents_name'] = @$_POST['dailytvtorrents_name'];
-					$db->update('series', $update, array('id' => $existingShow->id));
-				}
-				else {
-					$adding_show_tvdb_result = true;
-					$noredirect = true;
-				}
-
-				$insert = false;
-			}
+	// Search
+	if ( $action == 'search' ) {
+		$adding_show_tvdb_result = null;
+		if ( $name ) {
+			$adding_show_tvdb_result = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name));
 		}
-
-		if ( $insert ) {
-			$db->insert('series', $insert);
-			$id = $db->insert_id();
-		}
-
-		if ( empty($noredirect) ) {
-			exit('OK' . $id);
-		}
-	}
-	else {
-		$adding_show_tvdb_result = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($_POST['name']));
+		require 'tpl.add-show.php';
+		exit;
 	}
 
-	require 'tpl.add-show.php';
-	exit;
+	// Save
+	$db->insert('series', $insert);
+	$id = $db->insert_id();
+
+	exit('OK' . $id);
 }
 
 // Change show order
@@ -348,17 +335,6 @@ else if ( isset($_GET['resetshow']) ) {
 else if ( isset($_GET['inactive']) ) {
 	require 'tpl.shows.php';
 	exit;
-}
-
-$exists = false;
-if (@$adding_show_tvdb_result) {
-	$existingShow = $db->select('series', array('deleted' => 0, 'name' => $_POST['name']), null, 'Show')->first();
-	if ($existingShow) {
-		$exists = true;
-		if ($existingShow->tvdb_series_id && empty($_POST['tvdb_series_id'])) {
-			$_POST['tvdb_series_id'] = $existingShow->tvdb_series_id;
-		}
-	}
 }
 
 ?>
