@@ -8,7 +8,7 @@
 		<p>
 			<button name="_action" value="search" class="submit">Search</button>
 			<button name="_action" value="save">Save</button>
-		<p>
+		</p>
 
 		<?if (@$adding_show_tvdb_result):?>
 			<script>window.on('load', function() { scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight); });</script>
@@ -18,9 +18,10 @@
 					<ul>
 						<?foreach ($adding_show_tvdb_result->Series AS $show):?>
 							<li>
-								<a class="tvdb-search-result" title="<?=html($show->Overview)?>" data-id="<?=$show->seriesid?>" data-name="<?=html($show->SeriesName)?>" href="#<?=$show->seriesid?>"><?=html($show->SeriesName)?></a>
-								(<a target=_blank href="http://www.thetvdb.com/?tab=series&id=<?=$show->seriesid?>">=&gt;</a>)
-								<div class="tvdb-search-result-description"><?=html($show->Overview)?></div>
+								<a class="tvdb-search-result" title="<?= html($show->Overview) ?>" data-id="<?= $show->seriesid ?>" data-name="<?= html($show->SeriesName) ?>" href="#<?= $show->seriesid ?>"><?= html($show->SeriesName) ?></a>
+								(<?= date('Y', strtotime((string)$show->FirstAired)) ?>)
+								(<a target="_blank" href="http://www.thetvdb.com/?tab=series&id=<?= $show->seriesid ?>">=&gt;</a>)
+								<div class="tvdb-search-result-description"><?= html($show->Overview) ?></div>
 							</li>
 						<?endforeach?>
 					</ul>
