@@ -465,8 +465,13 @@ function doAndRespond(o, d) {
 	document.on('keydown', function(e) {
 		if ( document.activeElement == document.body ) {
 			if ( e.which == 191 ) {
-				$('search').focus();
 				e.preventDefault();
+				try {
+					$('load-more').getElement('a').click();
+				}
+				catch (ex) {
+					$('search').focus();
+				}
 			}
 		}
 	});
