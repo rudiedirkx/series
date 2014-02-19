@@ -522,7 +522,7 @@ $('series')
 			this.toggleClass('eligible');
 		}
 		else if ( esc ) {
-			this.removeClass('eligible');
+			this.blur();
 		}
 		else if ( up || down ) {
 			if ( this.hasClass('eligible') ) {
