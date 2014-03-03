@@ -169,6 +169,7 @@ else if ( isset($_POST['id'], $_POST['name']) ) {
 
 // Toggle active status
 else if ( isset($_GET['id'], $_GET['active']) ) {
+	$id = $_GET['id'];
 	$active = (bool)$_GET['active'];
 
 	$update = array('active' => $active, 'changed' => time());
@@ -176,7 +177,9 @@ else if ( isset($_GET['id'], $_GET['active']) ) {
 		$update['watching'] = false;
 	}
 
-	$db->update('series', $update, array('id' => $_GET['id']));
+	$db->update('series', $update, compact('id'));
+
+	setcookie('series_hilited', $id);
 
 	header('Location: ./');
 	exit;
@@ -219,6 +222,8 @@ else if ( isset($_GET['watching']) ) {
 		$db->update('series', 'watching = 0', '1');
 		$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
 	}
+
+	setcookie('series_hilited', $_GET['watching']);
 
 	header('Location: ./');
 	exit;
