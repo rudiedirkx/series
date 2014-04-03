@@ -64,7 +64,8 @@ if ( isset($_POST['name'], $_POST['tvdb_series_id']) && !isset($_POST['id']) ) {
 	if ( $action == 'search' ) {
 		$adding_show_tvdb_result = null;
 		if ( $name ) {
-			$adding_show_tvdb_result = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name));
+			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name);
+			$adding_show_tvdb_result = simplexml_load_file($url);
 		}
 		require 'tpl.add-show.php';
 		exit;
@@ -236,11 +237,11 @@ else if ( isset($_GET['updateshow']) ) {
 	if ( $show = Show::get($id) ) {
 		if ( !$show->tvdb_series_id ) {
 			// get tvdb's series_id // simple API's rule!
-			$xml = simplexml_load_file('http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($show->name));
+			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($show->name);
+			$xml = simplexml_load_file($url);
 			if ( isset($xml->Series[0]) ) {
 				$Series = (array)$xml->Series[0];
-				if ( isset($Series['seriesid'], $Series['IMDB_ID']) ) {
-					// okay, this is the right one
+				if ( isset($Series['seriesid']) ) {
 					$db->update('series', array(
 						'name' => $Series['SeriesName'],
 						'tvdb_series_id' => $Series['seriesid'],
