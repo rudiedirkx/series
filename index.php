@@ -96,7 +96,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 		// fetch show
 		$show = Show::get($_POST['id']);
-		$ne = $show->next_episode;
+		$ne = $show->next_episode ?: '1.0';
 
 		// Parse and up/down `next_episode`
 		$parts = array_map('intval', explode('.', $ne));
