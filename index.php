@@ -127,7 +127,14 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 			$E = str_pad($E, 2, '0', STR_PAD_LEFT);
 
 			// More detailed feedback
-			$episodes = $db->select_one('seasons', 'episodes', array('series_id' => $show->id, 'season' => $S));
+			$season = $db->select('seasons', array('series_id' => $show->id, 'season' => $S))->first();
+			$episodes = $season ? $season->episodes : 0;
+
+			$season_from = $season_to = '';
+			if ( $season->runs_from && $season->runs_to ) {
+				$season_from = date('M Y', strtotime($season->runs_from));
+				$season_to = date('M Y', strtotime($season->runs_to));
+			}
 		}
 
 		// Save
@@ -141,6 +148,8 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 			'next_episode' => $ne,
 			'season' => $S,
 			'episodes' => (int)$episodes,
+			'season_from' => $season_from,
+			'season_to' => $season_to,
 		)));
 	}
 
@@ -461,7 +470,11 @@ function doAndRespond(o, d) {
 
 		o.setHTML(rsp.next_episode);
 		if ( rsp.season && rsp.episodes ) {
-			o.attr('title', 'Season ' + rsp.season + ' has ' + rsp.episodes + ' episodes');
+			var title = 'Season ' + rsp.season + ' has ' + rsp.episodes + ' episodes. ';
+			if ( rsp.season_from && rsp.season_to ) {
+				title += 'It ran from ' + rsp.season_from + ' to ' + rsp.season_to + '. ';
+			}
+			o.attr('title', title.trim());
 		}
 	});
 	return false;
