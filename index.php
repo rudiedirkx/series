@@ -304,10 +304,12 @@ else if ( isset($_GET['updateshow']) ) {
 					$seasons[$S] = isset($seasons[$S]) ? max($seasons[$S], $E) : $E;
 
 					$aired = (string)$episode->FirstAired;
-					$date = date('Y-m-d', is_numeric($aired) ? $aired : strtotime($aired));
+					if ( $aired ) {
+						$date = date('Y-m-d', is_numeric($aired) ? $aired : strtotime($aired));
 
-					$runsFrom[$S] = isset($runsFrom[$S]) ? min($runsFrom[$S], $date) : $date;
-					$runsTo[$S] = isset($runsTo[$S]) ? max($runsTo[$S], $date) : $date;
+						$runsFrom[$S] = isset($runsFrom[$S]) ? min($runsFrom[$S], $date) : $date;
+						$runsTo[$S] = isset($runsTo[$S]) ? max($runsTo[$S], $date) : $date;
+					}
 				}
 			}
 
@@ -319,8 +321,8 @@ else if ( isset($_GET['updateshow']) ) {
 					'series_id' => $show->id,
 					'season' => $S,
 					'episodes' => $E,
-					'runs_from' => $runsFrom[$S],
-					'runs_to' => $runsTo[$S],
+					'runs_from' => @$runsFrom[$S] ?: '',
+					'runs_to' => @$runsTo[$S] ?: '',
 				));
 			}
 			$db->commit();
