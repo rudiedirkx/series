@@ -131,7 +131,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 			$episodes = $season ? $season->episodes : 0;
 
 			$season_from = $season_to = '';
-			if ( $season->runs_from && $season->runs_to ) {
+			if ( $season && $season->runs_from && $season->runs_to ) {
 				$season_from = date('M Y', strtotime($season->runs_from));
 				$season_to = date('M Y', strtotime($season->runs_to));
 			}
