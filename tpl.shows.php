@@ -49,8 +49,10 @@ foreach ( $series AS $n => $show ) {
 		$classes[] = 'hilited';
 	}
 
+	$tvdbAction = 'link';
 	$thisSeasonsEpisodes = $banner = '';
 	if ( $show->tvdb_series_id ) {
+		$tvdbAction = 'update';
 		$classes[] = 'with-tvdb';
 
 		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && $show->season ) {
@@ -86,7 +88,7 @@ foreach ( $series AS $n => $show ) {
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
-	echo "\t" . '<td class="tvdb"><a href="?updateshow=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
+	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . 'show=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name show-banner"><span' . $title . ' class="show-name" id="show-name-' . $show->id . '">' . $show->name . '</span> <span class="edit-title">(<a href="#" onclick="return changeValue(this.parentNode.parentNode.firstElementChild, ' . $show->id . ',\'name\');" title="Click to edit show name">e</a>)</span></td>' . "\n";
 	if ($cfg->banners) {
 		echo "\t" . '<td class="picture show-banner">' . ( $banner ? '<img src="picture.png" alt="banner" />' : '' ) . '</td>' . "\n";

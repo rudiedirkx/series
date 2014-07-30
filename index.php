@@ -42,8 +42,27 @@ $skip = $cfg->dont_load_inactive;
 
 
 
+// Link a show to TVDB, pt II
+if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_action']) && $_POST['_action'] == 'save' ) {
+	$id = $_POST['id'];
+	$db->update('series', array(
+		'name' => $_POST['name'],
+		'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
+		'changed' => time(),
+	), compact('id'));
+
+	// Do updateshow directly..?
+	if ( $_POST['tvdb_series_id'] ) {
+		if ( $show = Show::get($id) ) {
+			$show->updateTVDB();
+		}
+	}
+
+	exit('OK' . $id);
+}
+
 // New show
-if ( isset($_POST['name'], $_POST['tvdb_series_id']) && !isset($_POST['id']) ) {
+else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 	$action = @$_POST['_action'] ?: 'search';
 
 	$name = trim($_POST['name']);
@@ -51,9 +70,13 @@ if ( isset($_POST['name'], $_POST['tvdb_series_id']) && !isset($_POST['id']) ) {
 		$action = 'search';
 	}
 
+	if ( isset($_POST['id']) ) {
+		$linkingShow = Show::get($_POST['id']);
+	}
+
 	$insert = array(
 		'name' => $name,
-		'tvdb_series_id' => $_POST['tvdb_series_id'],
+		'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
 		'deleted' => 0,
 		'active' => 1,
 		'watching' => 0,
@@ -74,6 +97,10 @@ if ( isset($_POST['name'], $_POST['tvdb_series_id']) && !isset($_POST['id']) ) {
 	// Save
 	$db->insert('series', $insert);
 	$id = $db->insert_id();
+
+	if ( $show = Show::get($id) ) {
+		$show->updateTVDB();
+	}
 
 	exit('OK' . $id);
 }
@@ -197,7 +224,7 @@ else if ( isset($_GET['id'], $_GET['active']) ) {
 
 // Delete show
 else if ( isset($_GET['delete']) ) {
-	$db->update('series', 'deleted = 1', array('id' => $_GET['id']));
+	$db->update('series', 'deleted = 1', array('id' => $_GET['delete']));
 
 	header('Location: ./');
 	exit;
@@ -239,94 +266,29 @@ else if ( isset($_GET['watching']) ) {
 	exit;
 }
 
+// Link a show to TVDB, pt I
+else if ( isset($_GET['linkshow']) ) {
+	$id = (int)$_GET['linkshow'];
+
+	if ( $linkingShow = Show::get($id) ) {
+		if ( !$linkingShow->tvdb_series_id ) {
+			$name = $_POST['name'] = $linkingShow->name;
+			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name);
+			$adding_show_tvdb_result = simplexml_load_file($url);
+			require 'tpl.add-show.php';
+			exit;
+		}
+	}
+
+	exit('Some error. Whatever.');
+}
+
 // Update one show
 else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
 	if ( $show = Show::get($id) ) {
-		if ( !$show->tvdb_series_id ) {
-			// get tvdb's series_id // simple API's rule!
-			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($show->name);
-			$xml = simplexml_load_file($url);
-			if ( isset($xml->Series[0]) ) {
-				$Series = (array)$xml->Series[0];
-				if ( isset($Series['seriesid']) ) {
-					$db->update('series', array(
-						'name' => $Series['SeriesName'],
-						'tvdb_series_id' => $Series['seriesid'],
-						'data' => json_encode($Series),
-						'changed' => time(),
-					), array('id' => $id));
-
-					$show->tvdb_series_id = $Series['seriesid'];
-				}
-			}
-		}
-
-		if ( $show->tvdb_series_id ) {
-			// get package with details
-			$zipfile = './tmp/show-' . $show->tvdb_series_id . '.zip';
-			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $show->tvdb_series_id . '/all/en.zip'));
-
-			// read from it
-			$zip = new ZipArchive;
-			if ($zip->open($zipfile) !== TRUE) {
-				exit('Ugh?');
-			}
-			$xml = $zip->getFromName('en.xml');
-			$zip->close();
-
-			$xml = simplexml_load_string($xml);
-			$data = (array)$xml->Series;
-
-			// save description
-			$db->update('series', array(
-				'description' => $data['Overview'],
-				'data' => json_encode($data),
-				'changed' => time(),
-			), array('id' => $id));
-
-			// get seasons
-			$seasons = $runsFrom = $runsTo = array();
-			foreach ( $xml->Episode AS $episode ) {
-				// TV airings might have different episode/season numbers than DVD productions, so the number
-				// of episodes in a season depends on this constant, which should be a Config var.
-				if ( TVDB_DVD_OVER_TV ) {
-					$S = (int)(string)$episode->Combined_season;
-					$E = (int)(string)$episode->Combined_episodenumber;
-				}
-				else {
-					$S = (int)(string)$episode->SeasonNumber;
-					$E = (int)(string)$episode->EpisodeNumber;
-				}
-
-				if ( $S && $E ) {
-					$seasons[$S] = isset($seasons[$S]) ? max($seasons[$S], $E) : $E;
-
-					$aired = (string)$episode->FirstAired;
-					if ( $aired ) {
-						$date = date('Y-m-d', is_numeric($aired) ? $aired : strtotime($aired));
-
-						$runsFrom[$S] = isset($runsFrom[$S]) ? min($runsFrom[$S], $date) : $date;
-						$runsTo[$S] = isset($runsTo[$S]) ? max($runsTo[$S], $date) : $date;
-					}
-				}
-			}
-
-			// save seasons
-			$db->begin();
-			$db->delete('seasons', array('series_id' => $show->id));
-			foreach ( $seasons AS $S => $E ) {
-				$db->insert('seasons', array(
-					'series_id' => $show->id,
-					'season' => $S,
-					'episodes' => $E,
-					'runs_from' => @$runsFrom[$S] ?: '',
-					'runs_to' => @$runsTo[$S] ?: '',
-				));
-			}
-			$db->commit();
-		}
+		$show->updateTVDB();
 	}
 
 	if ( AJAX ) {
@@ -583,11 +545,23 @@ $('series')
 	})
 	.on('click', 'td.tvdb > a', function(e) {
 		e.preventDefault();
-		this.getChildren('img').attr('src', 'loading16.gif');
-		$.post(this.attr('href')).on('done', function(e) {
+		var $img = this.getElement('img'),
+			src = $img.attr('src');
+		$img.attr('src', 'loading16.gif');
+
+		var handler = this.hasClass('update') ? function(e) {
 			var t = this.responseText;
 			RorA(t);
-		});
+		} : function(e) {
+			$img.attr('src', src);
+
+			var html = this.responseText;
+			if ( '<' == html.trim()[0] ) {
+				$('add-show-wrapper').setHTML(html);
+				$('showname').select();
+			}
+		};
+		$.post(this.attr('href')).on('done', handler);
 	})
 ;
 </script>

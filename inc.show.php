@@ -41,4 +41,74 @@ class Show extends db_generic_record {
 	public function get_num_seasons() {
 		return count($this->seasons);
 	}
+
+	public function updateTVDB() {
+		global $db;
+
+		if ( $this->tvdb_series_id ) {
+			// get package with details
+			$zipfile = './tmp/show-' . $this->tvdb_series_id . '.zip';
+			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $this->tvdb_series_id . '/all/en.zip'));
+
+			// read from it
+			$zip = new ZipArchive;
+			if ($zip->open($zipfile) !== TRUE) {
+				exit('Ugh?');
+			}
+			$xml = $zip->getFromName('en.xml');
+			$zip->close();
+
+			$xml = simplexml_load_string($xml);
+			$data = (array)$xml->Series;
+
+			// save description
+			$db->update('series', array(
+				'description' => $data['Overview'],
+				'data' => json_encode($data),
+				'changed' => time(),
+			), array('id' => $this->id));
+
+			// get seasons
+			$seasons = $runsFrom = $runsTo = array();
+			foreach ( $xml->Episode AS $episode ) {
+				// TV airings might have different episode/season numbers than DVD productions, so the number
+				// of episodes in a season depends on this constant, which should be a Config var.
+				if ( TVDB_DVD_OVER_TV ) {
+					$S = (int)(string)$episode->Combined_season;
+					$E = (int)(string)$episode->Combined_episodenumber;
+				}
+				else {
+					$S = (int)(string)$episode->SeasonNumber;
+					$E = (int)(string)$episode->EpisodeNumber;
+				}
+
+				if ( $S && $E ) {
+					$seasons[$S] = isset($seasons[$S]) ? max($seasons[$S], $E) : $E;
+
+					$aired = (string)$episode->FirstAired;
+					if ( $aired ) {
+						$date = date('Y-m-d', is_numeric($aired) ? $aired : strtotime($aired));
+
+						$runsFrom[$S] = isset($runsFrom[$S]) ? min($runsFrom[$S], $date) : $date;
+						$runsTo[$S] = isset($runsTo[$S]) ? max($runsTo[$S], $date) : $date;
+					}
+				}
+			}
+
+			// save seasons
+			$db->begin();
+			$db->delete('seasons', array('series_id' => $this->id));
+			foreach ( $seasons AS $S => $E ) {
+				$db->insert('seasons', array(
+					'series_id' => $this->id,
+					'season' => $S,
+					'episodes' => $E,
+					'runs_from' => @$runsFrom[$S] ?: '',
+					'runs_to' => @$runsTo[$S] ?: '',
+				));
+			}
+			$db->commit();
+		}
+	}
+
 }

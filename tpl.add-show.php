@@ -1,7 +1,11 @@
 
 <form id="add-show" method="post" action>
+	<? if (@$linkingShow): ?>
+		<input type="hidden" name="id" value="<?= $linkingShow->id ?>" />
+	<? endif ?>
+
 	<fieldset style="display: inline-block">
-		<legend>Add show</legend>
+		<legend><?= @$linkingShow ? 'Link show' : 'Add show' ?></legend>
 		<p>Name: <input id="showname" type="search" name="name" value="<?= (string)@$_POST['name'] ?>" /></p>
 		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?= (string)@$_POST['tvdb_series_id'] ?>" /></p>
 
