@@ -79,7 +79,7 @@ foreach ( $series AS $n => $show ) {
 
 	$title = '';
 	if ( $show->description ) {
-		$title = ' title="' . html(substr($show->description, 0, 200)) . '...' . '"';
+		$title = ' title="' . html($show->description) . '"';
 	}
 
 	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '"' . $banner . '>' . "\n";
