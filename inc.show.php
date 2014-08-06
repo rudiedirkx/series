@@ -25,6 +25,36 @@ class Show extends db_generic_record {
 		return $db->select_by_field('seasons', 'season', array('series_id' => $this->id))->all();
 	}
 
+	public function get_runs_from() {
+		if ( $this->seasons ) {
+			$season = $this->seasons[1];
+			return $season->runs_from ?: null;
+		}
+	}
+
+	public function get_runs_to() {
+		if ( $this->seasons ) {
+			$season = $this->seasons[count($this->seasons)];
+			return $season->runs_to ?: null;
+		}
+	}
+
+	public function get_pretty_runs_from() {
+		if ( $this->runs_from ) {
+			return date('M Y', strtotime($this->runs_from));
+		}
+
+		return '?';
+	}
+
+	public function get_pretty_runs_to() {
+		if ( $this->runs_to ) {
+			return date('M Y', strtotime($this->runs_to));
+		}
+
+		return '?';
+	}
+
 	public function get_season() {
 		$seasons = $this->seasons; // Don't error suppress, because of __get magic
 		return @$seasons[$this->current_season]; // No magic here, so do error suppress
