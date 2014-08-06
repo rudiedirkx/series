@@ -63,10 +63,10 @@ tr.filtered-out {
 	#banner { display: none !important; }
 }
 @media (max-width: 400px) {
-	tr > .tvdb,
 	span.edit-title,
+	tr > .picture,
 	tr > .missed,
-	tr > .icon {
+	tr > .icon.watching {
 		display: none;
 	}
 }
