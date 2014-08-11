@@ -10,11 +10,6 @@ if ( !$db ) {
 	exit("<p>Que pasa, amigo!? I can't read from or write to the database! Do you have a writable ./db/ folder? <strong>No bueno!</strong></p>");
 }
 
-// Ensure writable tmp folder
-if ( !is_dir('tmp') || !is_writable('tmp') ) {
-	exit("<p>Que pasa, amigo!? You're missing a writable ./tmp/ folder to store tvdb downloads in. <strong>No bueno!</strong></p>");
-}
-
 // Everything. UTF-8. Always. Everywhere.
 mb_internal_encoding('UTF-8');
 header('Content-type: text/html; charset=utf-8');
