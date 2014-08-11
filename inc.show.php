@@ -76,6 +76,8 @@ class Show extends db_generic_record {
 		global $db;
 
 		if ( $this->tvdb_series_id ) {
+			// @todo Download zipfile to memory and extract from there, so no writable ./tmp/ is necessary
+
 			// get package with details
 			$zipfile = './tmp/show-' . $this->tvdb_series_id . '.zip';
 			file_put_contents($zipfile, file_get_contents('http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $this->tvdb_series_id . '/all/en.zip'));
