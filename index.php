@@ -51,7 +51,6 @@ if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_acti
 		'changed' => time(),
 	), compact('id'));
 
-	// Do updateshow directly..?
 	if ( $_POST['tvdb_series_id'] ) {
 		if ( $show = Show::get($id) ) {
 			$show->updateTVDB();

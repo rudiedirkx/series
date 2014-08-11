@@ -82,11 +82,12 @@ class Show extends db_generic_record {
 
 			// read from it
 			$zip = new ZipArchive;
-			if ($zip->open($zipfile) !== TRUE) {
-				exit('Ugh?');
-			}
+			$zip->open($zipfile);
 			$xml = $zip->getFromName('en.xml');
 			$zip->close();
+
+			// delete it, no cache
+			unlink($zipfile);
 
 			$xml = simplexml_load_string($xml);
 			$data = (array)$xml->Series;
