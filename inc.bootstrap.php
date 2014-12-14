@@ -1,5 +1,7 @@
 <?php
 
+define('REQUEST_MICROTIME', microtime(1));
+
 require 'inc.functions.php';
 
 require '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic

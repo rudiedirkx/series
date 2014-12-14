@@ -176,6 +176,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 			'episodes' => (int)$episodes,
 			'season_from' => $season_from,
 			'season_to' => $season_to,
+			'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
 		)));
 	}
 
@@ -364,6 +365,8 @@ else if ( isset($_GET['inactive']) ) {
 </div>
 
 <script>
+var timer = 0;
+
 <? if ($async || $skip): ?>
 	function startLazyLoad(delay) {
 		var $series = $('series');
@@ -425,6 +428,9 @@ function changeValue(o, id, n, v) {
 }
 
 function doAndRespond(o, d) {
+	var id = '[' + ++timer + '] Some Ajax';
+	console.time && console.time(id)
+
 	o.setHTML('<img src="spinner.gif" />');
 	$.post('', d).on('done', function(e, rsp) {
 		if ( typeof rsp == 'string' ) {
@@ -439,6 +445,7 @@ function doAndRespond(o, d) {
 			}
 			o.attr('title', title.trim());
 		}
+		console.timeEnd && console.timeEnd(id)
 	});
 	return false;
 }
