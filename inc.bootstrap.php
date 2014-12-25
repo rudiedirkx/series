@@ -25,5 +25,7 @@ if ( !$cfg->last_db_schema_sync || $cfg->last_db_schema_sync < strtotime('-1 hou
 	$schema = require 'inc.db-schema.php';
 	$db->schema($schema);
 
-	$db->replace('variables', array('name' => 'last_db_schema_sync', 'value' => time()));
+	// REPLACE INTO or MERGE won't work, because `variables` doesn't have a pk
+	$db->delete('variables', array('name' => 'last_db_schema_sync'));
+	$db->insert('variables', array('name' => 'last_db_schema_sync', 'value' => time()));
 }
