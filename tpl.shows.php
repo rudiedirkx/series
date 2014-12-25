@@ -5,21 +5,17 @@ $watching = $cfg->watching_up_top ? '(watching > 0) DESC,' : '';
 $sortable = $cfg->sortable ? 'o ASC,' : '';
 
 try {
-	$series = $db->fetch('
-		SELECT
-			*
-		FROM
-			series
+	$series = $db->fetch("
+		SELECT *
+		FROM series
 		WHERE
-			deleted = 0 AND (' . $lazyload . ' OR id = ' . (int)$hilited . ')
-		GROUP BY
-			id
+			deleted = 0 AND (" . $lazyload . " OR id = " . (int)$hilited . ")
 		ORDER BY
 			active DESC,
-			' . $watching . '
-			' . $sortable . '
-			LOWER(IF(\'the \' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC
-	', 'Show');
+			" . $watching . "
+			" . $sortable . "
+			LOWER(IF('the ' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC
+	", 'Show');
 }
 catch ( db_exception $ex ) {
 	exit('Query error: ' . $ex->getMessage() . "\n");
