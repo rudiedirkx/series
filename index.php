@@ -287,13 +287,20 @@ else if ( isset($_GET['linkshow']) ) {
 else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
+	$rsp = "Invalid id/show";
 	if ( $show = Show::get($id) ) {
-		$show->updateTVDB();
+		$success = $show->updateTVDB();
+		if ( $success === true ) {
+			$rsp = 'OK';
+		}
+		else if ( $success === false ) {
+			$rsp = 'Something failed. TVDB gone?';
+		}
 	}
 
 	if ( AJAX ) {
 		setcookie('series_hilited', $id);
-		echo 'OK';
+		echo $rsp;
 	}
 	else {
 		header('Location: ./#show-' . $id);

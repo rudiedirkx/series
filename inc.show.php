@@ -79,7 +79,12 @@ class Show extends db_generic_record {
 			// get package with details
 			$zipfile = tempnam(sys_get_temp_dir(), 'series_');
 			$url = 'http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $this->tvdb_series_id . '/all/en.zip';
-			file_put_contents($zipfile, file_get_contents($url));
+			$context = stream_context_create(array('http' => array('timeout' => 2)));
+			$content = @file_get_contents($url, FALSE, $context);
+			if ( !$content ) {
+				return false;
+			}
+			file_put_contents($zipfile, $content);
 
 			// read from it
 			$zip = new ZipArchive;
@@ -140,6 +145,8 @@ class Show extends db_generic_record {
 				));
 			}
 			$db->commit();
+
+			return true;
 		}
 	}
 
