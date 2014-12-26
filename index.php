@@ -410,7 +410,7 @@ function RorA(t, fn) {
 		location.reload();
 	});
 	if ( t == 'OK' ) {
-		return fn();
+		return fn() || true;
 	}
 	alert(t);
 }
@@ -564,7 +564,9 @@ $('series')
 
 		var handler = this.hasClass('update') ? function(e) {
 			var t = this.responseText;
-			RorA(t);
+			if ( !RorA(t) ) {
+				$img.attr('src', src);
+			}
 		} : function(e) {
 			$img.attr('src', src);
 
