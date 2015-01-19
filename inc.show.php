@@ -7,15 +7,6 @@ class Show extends db_generic_record {
 		return $show;
 	}
 
-	public $_cached = array();
-
-	public function __get( $name ) {
-		if ( is_callable($method = array($this, 'get_' . $name)) ) {
-			$this->_cached[] = $name;
-			return $this->$name = call_user_func($method);
-		}
-	}
-
 	public function get_current_season() {
 		return (int)$this->next_episode;
 	}

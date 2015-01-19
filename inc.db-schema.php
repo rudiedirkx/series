@@ -28,7 +28,7 @@ return array(
 		'runs_to' => array('type' => 'date'),
 	),
 	'variables' => array(
-		'name',
+		'name' => array('type' => 'text', 'unique' => true),
 		'value' => array('type' => 'text'),
 	),
 );
