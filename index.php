@@ -321,6 +321,13 @@ else if ( isset($_GET['resetshow']) ) {
 	exit;
 }
 
+// keep db hot
+else if ( isset($_GET['keepalive']) ) {
+	$db->delete('variables', array('name' => 'keepalive'));
+	$db->insert('variables', array('name' => 'keepalive', 'value' => time()));
+	exit('OK');
+}
+
 // lazy/async load inactive shows
 else if ( isset($_GET['inactive']) ) {
 	require 'tpl.shows.php';
@@ -502,6 +509,18 @@ function doAndRespond(o, d) {
 		})
 	;
 <? endif ?>
+
+var lastAlive = Date.now();
+document.on('mousemove', function(e) {
+	if ( Date.now() - lastAlive > 60000 ) {
+		lastAlive = Date.now();
+
+		console.time('Keep-alive');
+		$.post('?keepalive').on('done', function() {
+			console.timeEnd('Keep-alive');
+		});
+	}
+});
 
 $('series')
 	.on('contextmenu', '.next.oc a', function(e) {
