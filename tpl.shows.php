@@ -51,11 +51,11 @@ foreach ( $series AS $n => $show ) {
 		$tvdbAction = 'update';
 		$classes[] = 'with-tvdb';
 
-		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && $show->season ) {
-			$season = $show->season;
+		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && ($show->season || $show->seasons[1]) ) {
+			$season = $show->season ?: $show->seasons[1];
 			$episodes = $season->episodes;
 
-			$thisSeasonsEpisodes = 'Season ' . (int)$show->current_season . ' has ' . $episodes . ' episodes. ';
+			$thisSeasonsEpisodes = 'Season ' . $season->season . ' has ' . $episodes . ' episodes. ';
 
 			if ( $season->runs_from && $season->runs_to ) {
 				$from = date('M Y', strtotime($season->runs_from));
