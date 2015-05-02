@@ -70,3 +70,8 @@ tr.filtered-out {
 		display: none;
 	}
 }
+@media (min-width: 400px) {
+	tr > .info {
+		display: none;
+	}
+}

@@ -358,7 +358,8 @@ else if ( isset($_GET['inactive']) ) {
 			<? if ($cfg->banners): ?>
 				<th class="picture"></th>
 			<? endif ?>
-			<th>Nxt</th>
+			<th class="next">Nxt</th>
+			<th class="info"></th>
 			<th class="missed">Not</th>
 			<th class="seasons" title="Existing seasons">S</th>
 			<th class="icon" colspan="2"></th>
@@ -523,6 +524,13 @@ document.on('mousemove', function(e) {
 });
 
 $('series')
+	.on('click', '.info > a', function(e) {
+		e.preventDefault();
+		var tr = this.ancestor('tr');
+		var next = tr.getElement('.next > a');
+		var seasons = tr.getElement('.seasons > a');
+		alert(next.title + "\n\n" + seasons.title.split('\n\n')[0]);
+	})
 	.on('contextmenu', '.next.oc a', function(e) {
 		e.preventDefault();
 		this.addClass('eligible');
