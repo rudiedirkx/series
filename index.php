@@ -21,10 +21,6 @@ define('TVDB_DVD_OVER_TV', true);
 require 'inc.bootstrap.php';
 require 'inc.show.php';
 
-// Screw ACID, go SPEED!
-$db->execute('PRAGMA synchronous=OFF');
-$db->execute('PRAGMA journal_mode=OFF');
-
 // Define env vars
 define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile')));

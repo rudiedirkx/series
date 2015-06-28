@@ -20,10 +20,13 @@
 			<?if (!is_scalar($adding_show_tvdb_result)):?>
 				<div class="search-results">
 					<ul>
-						<?foreach ($adding_show_tvdb_result->Series AS $show):?>
-							<li>
+						<?foreach ($adding_show_tvdb_result->Series AS $show):
+							$exists = $db->count('series', array('tvdb_series_id' => $show->seriesid));
+							?>
+							<li class="<?= $exists ? 'exists' : '' ?>">
 								<a class="tvdb-search-result" title="<?= html($show->Overview) ?>" data-id="<?= $show->seriesid ?>" data-name="<?= html($show->SeriesName) ?>" href="#<?= $show->seriesid ?>"><?= html($show->SeriesName) ?></a>
 								(<?= date('Y', strtotime((string)$show->FirstAired)) ?>)
+								<?if ($exists):?>(<strong>you have this</strong>)<?endif?>
 								(<a target="_blank" href="http://www.thetvdb.com/?tab=series&id=<?= $show->seriesid ?>">=&gt;</a>)
 								<div class="tvdb-search-result-description"><?= html($show->Overview) ?></div>
 							</li>
