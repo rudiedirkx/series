@@ -240,7 +240,7 @@ else if ( isset($_GET['watching']) ) {
 		// Watch
 		else {
 			$maxWatching = $db->select_one('series', 'max(watching)', '1');
-			$update = array('watching' => $maxWatching + 1);
+			$update = array('watching' => $maxWatching + 1, 'active' => 1);
 			$db->update('series', $update, array('id' => $show->id));
 
 			// Only allow $cfg->max_watching shows to have watching > 1
@@ -477,7 +477,7 @@ function doAndRespond(o, d) {
 	});
 	var trs;
 	$('search')
-		.on('search', function(e) {
+		.on('input', function(e) {
 			if ( !trs ) {
 				trs = new Elements($('shows-inactive').rows);
 				trs.forEach(function(tr) {
@@ -496,12 +496,6 @@ function doAndRespond(o, d) {
 						method = match ? 'removeClass' : 'addClass';
 					tr[method]('filtered-out');
 				});
-			}
-		})
-		.on('keyup', function(e) {
-			if ( this.value != this.$lastValue ) {
-				this.$lastValue = this.value;
-				this.fire('search', e);
 			}
 		})
 	;
