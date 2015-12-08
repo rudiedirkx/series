@@ -27,10 +27,18 @@ if ( isset($_POST['cfg']) ) {
 	exit;
 }
 
+$total = $db->count('series', '1');
+$active = $db->count('series', 'active = ?', array(1));
+$watching = $db->count('series', 'watching >= ?', array(1));
+$withTvdb = $db->count('series', "tvdb_series_id <> ''");
+$deleted = $db->count('series', 'deleted = ?', array(1));
+
 ?>
 <style>
 label { font-weight: bold; display: block; }
 </style>
+
+<h1>Config</h1>
 
 <form method="post" action>
 	<? foreach ($options as $name => $el):
@@ -48,4 +56,38 @@ label { font-weight: bold; display: block; }
 	<p><input type="submit" /></p>
 </form>
 
+<h2>Stats</h2>
 
+<table>
+	<tr>
+		<th align="right">Total</th>
+		<td>:</td>
+		<td><?= $total ?></td>
+	</tr>
+	<tr>
+		<th align="right">Active</th>
+		<td>:</td>
+		<td><?= $active ?></td>
+		<td></td>
+		<td>(<?= round($active / $total * 100) ?> %)</td>
+	</tr>
+	<tr>
+		<th align="right">Watching</th>
+		<td>:</td>
+		<td><?= $watching ?></td>
+	</tr>
+	<tr>
+		<th align="right">With TVDB ID</th>
+		<td>:</td>
+		<td><?= $withTvdb ?></td>
+		<td></td>
+		<td>(<?= round($withTvdb / $total * 100) ?> %, <?= $total - $withTvdb ?> without)</td>
+	</tr>
+	<tr>
+		<th align="right">Deleted</th>
+		<td>:</td>
+		<td><?= $deleted ?></td>
+		<td></td>
+		<td>(<?= round($deleted / $total * 100) ?> %)</td>
+	</tr>
+</table>
