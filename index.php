@@ -463,8 +463,8 @@ function doAndRespond(o, d) {
 
 <? if ($cfg->search_inactives): ?>
 	document.on('keydown', function(e) {
-		if ( document.activeElement == document.body ) {
-			if ( e.which == 191 ) {
+		if ( document.activeElement.matches('body, a') ) {
+			if ( e.which == 191 ) { // slash
 				e.preventDefault();
 				try {
 					$('load-more').getElement('a').click();
