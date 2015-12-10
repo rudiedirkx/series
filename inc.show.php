@@ -3,7 +3,9 @@
 class Show extends db_generic_record {
 	static public function get( $id ) {
 		global $db;
-		$show = $db->select('series', array('id' => $id), null, 'Show')->first();
+		$conditions = array('id' => $id);
+		defined('USER_ID') and $conditions['user_id'] = USER_ID;
+		$show = $db->select('series', $conditions, null, 'Show')->first();
 		return $show;
 	}
 

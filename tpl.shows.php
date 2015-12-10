@@ -51,7 +51,7 @@ foreach ( $series AS $n => $show ) {
 		$tvdbAction = 'update';
 		$classes[] = 'with-tvdb';
 
-		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && ($show->season || $show->seasons[1]) ) {
+		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && ($show->season || @$show->seasons[1]) ) {
 			$season = $show->season ?: $show->seasons[1];
 			$episodes = $season->episodes;
 
