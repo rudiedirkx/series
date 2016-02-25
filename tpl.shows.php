@@ -9,7 +9,7 @@ try {
 		SELECT *
 		FROM series
 		WHERE
-			deleted = 0 AND (" . $lazyload . " OR id = " . (int)$hilited . ")
+			deleted = 0 AND (" . $lazyload . " OR (id = " . (int)$hilited . " AND active = 0))
 		ORDER BY
 			active DESC,
 			" . $watching . "

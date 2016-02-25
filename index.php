@@ -384,7 +384,7 @@ var timer = 0;
 		var $loadingMore = document.el('tbody').attr('id', 'loading-more').addClass('loading-more').setHTML('<tr><td colspan="9">&nbsp;</td></tr>').inject($series);
 		setTimeout(function() {
 			$loadingMore.addClass('loading');
-			$.get('?inactive=1&series_hilited=<?= $hilited ?>').on('done', function(e, html) {
+			$.get('?inactive=1').on('done', function(e, html) {
 				$loadingMore.remove();
 				document.el('tbody', {"id": 'shows-inactive'}).setHTML(html).inject($series);
 				document.body.addClass('show-all');
@@ -564,7 +564,7 @@ $('series')
 		}
 	})
 	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {
-		var src = 'http://thetvdb.com/banners/' + this.ancestor('tr').data('banner');
+		var src = '//thetvdb.com/banners/' + this.ancestor('tr').data('banner');
 		$('banner').attr('src', src).show();
 
 		this.on('mouseout', this._onmouseout = function(e) {
