@@ -9,7 +9,7 @@ try {
 		SELECT *
 		FROM series
 		WHERE
-			deleted = 0 AND (" . $lazyload . " OR (id = " . (int)$hilited . " AND active = 0))
+			(" . $lazyload . " OR (id = " . (int)$hilited . " AND active = 0))
 		ORDER BY
 			active DESC,
 			" . $watching . "
@@ -43,6 +43,10 @@ foreach ( $series AS $n => $show ) {
 	$hilite = $hilited == $show->id;
 	if ( $hilite ) {
 		$classes[] = 'hilited';
+	}
+
+	if ( $show->deleted ) {
+		$classes[] = 'deleted';
 	}
 
 	$tvdbAction = 'link';
@@ -93,7 +97,20 @@ foreach ( $series AS $n => $show ) {
 	echo "\t" . '<td class="info"><a href="#"><img src="information.png" alt="Info" /></a></td>' . "\n";
 	echo "\t" . '<td class="missed oc"><a href="#" onclick="return changeValue(this, ' . $show->id . ', \'missed\');">' . ( trim($show->missed) ? trim($show->missed) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && $show->seasons ? '<a title="Total episodes: ' . $show->total_episodes . " (" . $show->pretty_runs_from . " - " . $show->pretty_runs_to . ")\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
-	echo "\t" . '<td class="icon active"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
-	echo "\t" . '<td class="icon watching">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
+	if ( !$show->deleted ) {
+		echo "\t" . '<td class="icon active"><a href="?id=' . $show->id . '&active=' . ( $show->active ? 0 : 1 ) . '" title="' . ( $show->active ? 'Active. Click to deactivate' : 'Inactive. Click to activate' ) . '"><img src="' . ( $show->active ? 'no' : 'yes' ) . '.gif" alt="' . ( $show->active ? 'ACTIVE' : 'INACTIVE' ) . '" /></a></td>' . "\n";
+	}
+	else {
+		echo "\t" . '<td class="icon active"></td>' . "\n";
+	}
+	if ( $show->active ) {
+		echo "\t" . '<td class="icon watching">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
+	}
+	elseif ( !$show->deleted ) {
+		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?delete=' . $show->id . '" title="Click to permanently hide."><img src="delete.png" alt="DELETE" /></a></td>' . "\n";
+	}
+	else {
+		echo "\t" . '<td class="icon watching"></td>' . "\n";
+	}
 	echo '</tr>' . "\n\n\n\n\n\n";
 }

@@ -24,6 +24,7 @@ a.eligible { -webkit-transform: scale(1.3); -moz-transform: scale(1.3); -ms-tran
 td.next a, td.missed a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
+tr.deleted td { opacity: 0.25; background: yellow; }
 td.icon { padding-right: 4px; padding-left: 4px; }
 tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
 td:not(.move) img { width: 16px; height: 16px; display: block; }

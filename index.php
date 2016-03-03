@@ -220,9 +220,14 @@ else if ( isset($_GET['id'], $_GET['active']) ) {
 
 // Delete show
 else if ( isset($_GET['delete']) ) {
-	$db->update('series', 'deleted = 1', array('id' => $_GET['delete']));
+	$db->update('series', array('deleted' => 1), array('id' => $_GET['delete']));
 
-	header('Location: ./');
+	if ( AJAX ) {
+		echo 'OK';
+	}
+	else {
+		header('Location: ./');
+	}
 	exit;
 }
 
@@ -461,7 +466,7 @@ function doAndRespond(o, d) {
 	return false;
 }
 
-<? if ($cfg->search_inactives): ?>
+<? if ($cfg->search_inactives && ($async || $skip)): ?>
 	document.on('keydown', function(e) {
 		if ( document.activeElement.matches('body, a') ) {
 			if ( e.which == 191 ) { // slash
@@ -564,7 +569,7 @@ $('series')
 		}
 	})
 	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {
-		var src = '//thetvdb.com/banners/' + this.ancestor('tr').data('banner');
+		var src = 'http://thetvdb.com/banners/' + this.ancestor('tr').data('banner');
 		$('banner').attr('src', src).show();
 
 		this.on('mouseout', this._onmouseout = function(e) {
@@ -590,10 +595,24 @@ $('series')
 			var html = this.responseText;
 			if ( '<' == html.trim()[0] ) {
 				$('add-show-wrapper').setHTML(html);
-				$('showname').select();
+				setTimeout(function() {
+					$('showname').focus();
+				});
 			}
 		};
 		$.post(this.attr('href')).on('done', handler);
+	})
+	.on('click', 'a.ajaxify', function(e) {
+		e.preventDefault();
+
+		var $img = this.getElement('img'),
+			src = $img.attr('src');
+		$img.attr('src', 'loading16.gif');
+
+		$.get(this.href).on('done', function(e, rsp) {
+			$img.attr('src', src);
+			RorA(rsp);
+		});
 	})
 ;
 </script>
