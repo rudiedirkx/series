@@ -383,6 +383,17 @@ else if ( isset($_GET['inactive']) ) {
 <script>
 var timer = 0;
 
+<? if ($hilited): ?>
+	window.on('load', function(e) {
+		var el = $('show-<?= $hilited ?>');
+		if (el) {
+			setTimeout(function() {
+				el.scrollIntoViewIfNeeded();
+			}, 200);
+		}
+	});
+<? endif ?>
+
 <? if ($async || $skip): ?>
 	function startLazyLoad(delay) {
 		var $series = $('series');
