@@ -129,13 +129,15 @@ class Show extends db_generic_record {
 			$db->begin();
 			$db->delete('seasons', array('series_id' => $this->id));
 			foreach ( $seasons AS $S => $E ) {
-				$db->insert('seasons', array(
-					'series_id' => $this->id,
-					'season' => $S,
-					'episodes' => $E,
-					'runs_from' => @$runsFrom[$S] ?: '',
-					'runs_to' => @$runsTo[$S] ?: '',
-				));
+				if ( isset($runsFrom[$S], $runsTo[$S]) ) {
+					$db->insert('seasons', array(
+						'series_id' => $this->id,
+						'season' => $S,
+						'episodes' => $E,
+						'runs_from' => $runsFrom[$S],
+						'runs_to' => $runsTo[$S],
+					));
+				}
 			}
 			$db->commit();
 

@@ -11,7 +11,7 @@ return array(
 		'deleted' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
 		'o' => array('unsigned' => true),
 		'watching' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
-		'tvdb_series_id',
+		'tvdb_series_id' => array('null' => false, 'default' => '0'),
 		'data',
 		'uptodate' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),
 		'description',
