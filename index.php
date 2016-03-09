@@ -147,31 +147,18 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 			// Add "0" padding
 			$E = str_pad($E, 2, '0', STR_PAD_LEFT);
-
-			// More detailed feedback
-			$season = $db->select('seasons', array('series_id' => $show->id, 'season' => $S))->first();
-			$episodes = $season ? $season->episodes : 0;
-
-			$season_from = $season_to = '';
-			if ( $season && $season->runs_from && $season->runs_to ) {
-				$season_from = date('M Y', strtotime($season->runs_from));
-				$season_to = date('M Y', strtotime($season->runs_to));
-			}
 		}
 
 		// Save
 		$ne = implode('.', $parts);
-		$update = array('next_episode' => $ne, 'changed' => time());
-		$db->update('series', $update, array('id' => $show->id));
+		$db->update('series', array(
+			'next_episode' => $show->next_episode = $ne,
+			'changed' => time(),
+		), array('id' => $show->id));
 
 		// respond
 		header('Content-type: text/json');
-		exit(json_encode(array(
-			'next_episode' => $ne,
-			'season' => $S,
-			'episodes' => (int)$episodes,
-			'season_from' => $season_from,
-			'season_to' => $season_to,
+		exit(json_encode($show->getNextEpisodeSummary() + array(
 			'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
 		)));
 	}
@@ -181,9 +168,17 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 // Edit field: next
 else if ( isset($_POST['id'], $_POST['next_episode']) ) {
-	$db->update('series', array('next_episode' => $_POST['next_episode'], 'changed' => time()), array('id' => $_POST['id']));
+	$show = Show::get($_POST['id']);
 
-	exit($db->select_one('series', 'next_episode', array('id' => $_POST['id'])));
+	$db->update('series', array(
+		'next_episode' => $show->next_episode = $_POST['next_episode'],
+		'changed' => time(),
+	), array('id' => $show->id));
+
+	header('Content-type: text/json');
+	exit(json_encode($show->getNextEpisodeSummary() + array(
+		'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
+	)));
 }
 
 // Edit field: missed
@@ -471,6 +466,9 @@ function doAndRespond(o, d) {
 				title += 'It ran from ' + rsp.season_from + ' to ' + rsp.season_to + '. ';
 			}
 			o.attr('title', title.trim());
+		}
+		else {
+			o.attr('title', '');
 		}
 		console.timeEnd && console.timeEnd(id)
 	});

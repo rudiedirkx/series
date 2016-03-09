@@ -56,18 +56,20 @@ foreach ( $series AS $n => $show ) {
 		$classes[] = 'with-tvdb';
 
 		if ( ($show->active || $cfg->load_tvdb_inactive || $hilite) && ($show->season || @$show->seasons[1]) ) {
-			$season = $show->season ?: $show->seasons[1];
-			$episodes = $season->episodes;
+			$season = $show->next_episode ? $show->season : $show->seasons[1];
+			if ( $season ) {
+				$episodes = $season->episodes;
 
-			$thisSeasonsEpisodes = 'Season ' . $season->season . ' has ' . $episodes . ' episodes. ';
+				$thisSeasonsEpisodes = 'Season ' . $season->season . ' has ' . $episodes . ' episodes. ';
 
-			if ( $season->runs_from && $season->runs_to ) {
-				$from = date('M Y', strtotime($season->runs_from));
-				$to = date('M Y', strtotime($season->runs_to));
-				$thisSeasonsEpisodes .= 'It ran from ' . $from . ' to ' . $to . '. ';
+				if ( $season->runs_from && $season->runs_to ) {
+					$from = date('M Y', strtotime($season->runs_from));
+					$to = date('M Y', strtotime($season->runs_to));
+					$thisSeasonsEpisodes .= 'It ran from ' . $from . ' to ' . $to . '. ';
+				}
+
+				$thisSeasonsEpisodes = ' title="' . trim($thisSeasonsEpisodes) . '"';
 			}
-
-			$thisSeasonsEpisodes = ' title="' . trim($thisSeasonsEpisodes) . '"';
 		}
 
 		if ( $cfg->banners ) {

@@ -145,4 +145,28 @@ class Show extends db_generic_record {
 		}
 	}
 
+	public function getNextEpisodeSummary() {
+		global $db;
+
+		$parts = array_map('intval', explode('.', $this->next_episode));
+		if ( count($parts) == 2 ) {
+			$season = $db->select('seasons', array('series_id' => $this->id, 'season' => $parts[0]))->first();
+			$episodes = $season ? $season->episodes : 0;
+
+			$season_from = $season_to = '';
+			if ( $season && $season->runs_from && $season->runs_to ) {
+				$season_from = date('M Y', strtotime($season->runs_from));
+				$season_to = date('M Y', strtotime($season->runs_to));
+			}
+
+			return array(
+				'next_episode' => $this->next_episode,
+				'season' => $parts[0],
+				'episodes' => $episodes,
+				'season_from' => $season_from,
+				'season_to' => $season_to,
+			);
+		}
+	}
+
 }
