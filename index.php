@@ -628,10 +628,12 @@ $('series')
 ;
 </script>
 
-</body>
+<details>
+	<summary><?= count($db->queries) ?> queries</summary>
+	<ol><li><?= implode('</li><li>', $db->queries) ?></li></ol>
+</details>
 
-<!-- <?= count($db->queries) ?> queries -->
-<!-- <? print_r($db->queries) ?> -->
+</body>
 
 </html>
 
