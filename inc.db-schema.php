@@ -1,8 +1,14 @@
 <?php
 
 return array(
+	'users' => array(
+		'id' => array('pk' => true),
+		'email' => array('null' => false),
+		'password' => array('null' => false),
+	),
 	'series' => array(
 		'id' => array('pk' => true),
+		'user_id' => array('unsigned' => true, 'default' => 1),
 		'name' => array('null' => false),
 		'next_episode' => array('null' => false, 'default' => ''),
 		'missed' => array('null' => false, 'default' => ''),

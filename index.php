@@ -1,8 +1,5 @@
 <?php
 
-define('TVDB_API_KEY', '94F0BD0D5948FE69');
-define('TVDB_DVD_OVER_TV', true);
-
 ## tvdb
 # get mirror
 #   http://www.thetvdb.com/api/94F0BD0D5948FE69/mirrors.xml
@@ -21,9 +18,7 @@ define('TVDB_DVD_OVER_TV', true);
 require 'inc.bootstrap.php';
 require 'inc.show.php';
 
-// Define env vars
-define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
-define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile')));
+is_logged_in(true);
 
 // Get and reset highlighted show
 $hilited = (int)@$_GET['series_hilited'] ?: (int)@$_COOKIE['series_hilited'];
@@ -40,15 +35,14 @@ $skip = $cfg->dont_load_inactive;
 
 // Link a show to TVDB, pt II
 if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_action']) && $_POST['_action'] == 'save' ) {
-	$id = $_POST['id'];
-	$db->update('series', array(
-		'name' => $_POST['name'],
-		'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
-		'changed' => time(),
-	), compact('id'));
+	if ( $show = Show::get($_POST['id']) ) {
+		$show->update(array(
+			'name' => $_POST['name'],
+			'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
+			'changed' => time(),
+		));
 
-	if ( $_POST['tvdb_series_id'] ) {
-		if ( $show = Show::get($id) ) {
+		if ( $_POST['tvdb_series_id'] ) {
 			$show->updateTVDB();
 		}
 	}
@@ -70,6 +64,7 @@ else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 	}
 
 	$insert = array(
+		'user_id' => USER_ID,
 		'name' => $name,
 		'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
 		'deleted' => 0,
@@ -100,67 +95,64 @@ else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 	exit('OK' . $id);
 }
 
-// Change show order
-else if ( isset($_POST['order']) ) {
-	$db->begin();
-	foreach ( explode(',', $_POST['order']) AS $i => $id ) {
-		$db->update('series', array('o' => $i), array('id' => $id));
-	}
-	$db->commit();
-
-	exit('OK');
-}
-
 // Edit scrollable field: next
 else if ( isset($_POST['id'], $_POST['dir']) ) {
-	if ( 0 != (int)$_POST['dir'] ) {
-		$delta = $_POST['dir'] < 0 ? -1 : 1;
+	if ( $show = Show::get($_POST['id']) ) {
+		if ( 0 != (int)$_POST['dir'] ) {
+			$delta = $_POST['dir'] < 0 ? -1 : 1;
 
-		// fetch show
-		$show = Show::get($_POST['id']);
-		$ne = $show->next_episode ?: '1.0';
+			// fetch show
+			$ne = $show->next_episode ?: '1.0';
 
-		// Parse and up/down `next_episode`
-		$parts = array_map('intval', explode('.', $ne));
-		$parts[count($parts)-1] += $delta;
+			// Parse and up/down `next_episode`
+			$parts = array_map('intval', explode('.', $ne));
+			$parts[count($parts)-1] += $delta;
 
-		// Default feedback
-		$episodes = 0;
+			// Default feedback
+			$episodes = 0;
 
-		// Check S if E changed.
-		if ( 2 == count($parts) ) {
-			$S =& $parts[0];
-			$E =& $parts[1];
+			// Check S if E changed.
+			if ( 2 == count($parts) ) {
+				$S =& $parts[0];
+				$E =& $parts[1];
 
-			// Moving down
-			if ( $E < 1 && $S > 1 ) {
-				if ( isset($show->seasons[$S-1]) ) {
-					$S -= 1;
-					$E = $show->seasons[$S]->episodes;
+				// Moving down
+				if ( $E < 1 && $S > 1 ) {
+					if ( isset($show->seasons[$S-1]) ) {
+						$S -= 1;
+						$E = $show->seasons[$S]->episodes;
+					}
+				}
+				// Moving up
+				else if ( isset($show->seasons[$S]) && $E > $show->seasons[$S]->episodes ) {
+					$S += 1;
+					$E = 1;
+				}
+
+				// Add "0" padding
+				$E = str_pad($E, 2, '0', STR_PAD_LEFT);
+
+				// More detailed feedback
+				$season = $db->select('seasons', array('series_id' => $show->id, 'season' => $S))->first();
+				$episodes = $season ? $season->episodes : 0;
+
+				$season_from = $season_to = '';
+				if ( $season && $season->runs_from && $season->runs_to ) {
+					$season_from = date('M Y', strtotime($season->runs_from));
+					$season_to = date('M Y', strtotime($season->runs_to));
 				}
 			}
-			// Moving up
-			else if ( isset($show->seasons[$S]) && $E > $show->seasons[$S]->episodes ) {
-				$S += 1;
-				$E = 1;
-			}
 
-			// Add "0" padding
-			$E = str_pad($E, 2, '0', STR_PAD_LEFT);
+			// Save
+			$ne = implode('.', $parts);
+			$show->update(array('next_episode' => $ne, 'changed' => time()));
+
+			// respond
+			header('Content-type: text/json');
+			exit(json_encode($show->getNextEpisodeSummary() + array(
+				'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
+			)));
 		}
-
-		// Save
-		$ne = implode('.', $parts);
-		$db->update('series', array(
-			'next_episode' => $show->next_episode = $ne,
-			'changed' => time(),
-		), array('id' => $show->id));
-
-		// respond
-		header('Content-type: text/json');
-		exit(json_encode($show->getNextEpisodeSummary() + array(
-			'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
-		)));
 	}
 
 	exit('W00t!?');
@@ -168,98 +160,103 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 // Edit field: next
 else if ( isset($_POST['id'], $_POST['next_episode']) ) {
-	$show = Show::get($_POST['id']);
+	if ( $show = Show::get($_POST['id']) ) {
+		$show->update(array(
+			'next_episode' => $_POST['next_episode'],
+			'changed' => time(),
+		));
 
-	$db->update('series', array(
-		'next_episode' => $show->next_episode = $_POST['next_episode'],
-		'changed' => time(),
-	), array('id' => $show->id));
+		header('Content-type: text/json');
+		exit(json_encode($show->getNextEpisodeSummary() + array(
+			'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
+		)));
+	}
 
-	header('Content-type: text/json');
-	exit(json_encode($show->getNextEpisodeSummary() + array(
-		'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
-	)));
+	exit($_POST['next_episode']);
 }
 
 // Edit field: missed
 else if ( isset($_POST['id'], $_POST['missed']) ) {
-	$db->update('series', array('missed' => $_POST['missed'], 'changed' => time()), array('id' => $_POST['id']));
+	if ( $show = Show::get($_POST['id']) ) {
+		$show->update(array('missed' => $_POST['missed'], 'changed' => time()));
+	}
 
-	exit($db->select_one('series', 'missed', array('id' => $_POST['id'])));
+	exit($_POST['missed']);
 }
 
 // Edit field: name
 else if ( isset($_POST['id'], $_POST['name']) ) {
-	$db->update('series', array('name' => $_POST['name'], 'changed' => time()), array('id' => $_POST['id']));
+	if ( $show = Show::get($_POST['id']) ) {
+		$show->update(array('name' => $_POST['name'], 'changed' => time()));
+	}
 
-	exit($db->select_one('series', 'name', array('id' => $_POST['id'])));
+	exit($_POST['name']);
 }
 
 // Toggle active status
 else if ( isset($_GET['id'], $_GET['active']) ) {
-	$id = $_GET['id'];
-	$active = (bool)$_GET['active'];
+	if ( $show = Show::get($_GET['id']) ) {
+		$active = (bool)$_GET['active'];
 
-	$update = array('active' => $active, 'changed' => time());
-	if ( !$active ) {
-		$update['watching'] = false;
+		$update = array('active' => $active, 'changed' => time());
+		if ( !$active ) {
+			$update['watching'] = false;
+		}
+
+		$show->update($update);
+
+		setcookie('series_hilited', $show->id);
 	}
 
-	$db->update('series', $update, compact('id'));
-
-	setcookie('series_hilited', $id);
-
-	header('Location: ./');
-	exit;
+	return do_redirect('index');
 }
 
 // Delete show
 else if ( isset($_GET['delete']) ) {
-	$db->update('series', array('deleted' => 1), array('id' => $_GET['delete']));
+	if ( $show = Show::get($_GET['delete']) ) {
+		$show->update(array('deleted' => 1));
+	}
 
 	if ( AJAX ) {
-		echo 'OK';
+		exit('OK');
 	}
-	else {
-		header('Location: ./');
-	}
-	exit;
+
+	return do_redirect('index');
 }
 
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
-	// Toggle selected
-	if ( $cfg->max_watching > 1 ) {
-		$show = Show::get($_GET['watching']);
+	if ( $show = Show::get($_GET['watching']) ) {
 
-		// Unwatch
-		if ($show->watching) {
-			$update = array('watching' => 0);
-			$db->update('series', $update, array('id' => $show->id));
+		// Toggle selected
+		if ( $cfg->max_watching > 1 ) {
+
+			// Unwatch
+			if ( $show->watching ) {
+				$show->update(array('watching' => 0));
+			}
+			// Watch
+			else {
+				$maxWatching = $db->select_one('series', 'MAX(watching)', array('user_id' => USER_ID));
+				$show->update(array('watching' => $maxWatching + 1, 'active' => 1));
+
+				// Only allow $cfg->max_watching shows to have watching > 1
+				$allWatching = $db->select_fields('series', 'id, watching', 'watching > 0 AND user_id = ? ORDER BY watching DESC, id DESC', USER_ID);
+				$allWatching = array_keys($allWatching);
+				$illegallyWatching = array_slice($allWatching, $cfg->max_watching);
+				$db->update('series', array('watching' => 0), array('id' => $illegallyWatching, 'user_id' => USER_ID));
+			}
 		}
-		// Watch
+		// Only selected (no toggle, just ON)
 		else {
-			$maxWatching = $db->select_one('series', 'max(watching)', '1');
-			$update = array('watching' => $maxWatching + 1, 'active' => 1);
-			$db->update('series', $update, array('id' => $show->id));
-
-			// Only allow $cfg->max_watching shows to have watching > 1
-			$allWatching = $db->select_fields('series', 'id,watching', 'watching > 0 ORDER BY watching DESC, id DESC');
-			$allWatching = array_keys($allWatching);
-			$illegallyWatching = array_slice($allWatching, $cfg->max_watching);
-			$db->update('series', array('watching' => 0), array('id' => $illegallyWatching));
+			$db->update('series', array('watching' => 0), array('user_id' => USER_ID));
+			$show->update(array('watching' => 0));
 		}
-	}
-	// Only selected (no toggle, just ON)
-	else {
-		$db->update('series', 'watching = 0', '1');
-		$db->update('series', 'watching = 1', array('id' => $_GET['watching']));
+
+		setcookie('series_hilited', $show->id);
 	}
 
-	setcookie('series_hilited', $_GET['watching']);
-
-	header('Location: ./');
-	exit;
+	return do_redirect('index');
 }
 
 // Link a show to TVDB, pt I
@@ -294,27 +291,25 @@ else if ( isset($_GET['updateshow']) ) {
 		}
 	}
 
+	setcookie('series_hilited', $id);
 	if ( AJAX ) {
-		setcookie('series_hilited', $id);
-		echo $rsp;
-	}
-	else {
-		header('Location: ./#show-' . $id);
+		exit($rsp);
 	}
 
-	exit;
+	return do_redirect('index');
 }
 
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
-	// delete seasons/episodes
-	$db->delete('seasons', array('series_id' => $_GET['resetshow']));
+	if ( $show = Show::get($_GET['resetshow']) ) {
+		// delete seasons/episodes
+		$db->delete('seasons', array('series_id' => $_GET['resetshow']));
 
-	// delete tvdb series id
-	$db->update('series', array('tvdb_series_id' => 0, 'changed' => time()), array('id' => $_GET['resetshow']));
+		// delete tvdb series id
+		$db->update('series', array('tvdb_series_id' => 0, 'changed' => time()), array('id' => $_GET['resetshow']));
+	}
 
-	header('Location: ./');
-	exit;
+	return do_redirect('index');
 }
 
 // keep db hot

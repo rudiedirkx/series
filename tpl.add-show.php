@@ -21,7 +21,7 @@
 				<div class="search-results">
 					<ul>
 						<?foreach ($adding_show_tvdb_result->Series AS $show):
-							$exists = $db->count('series', array('tvdb_series_id' => $show->seriesid));
+							$exists = $db->count('series', array('tvdb_series_id' => $show->seriesid, 'user_id' => USER_ID));
 							?>
 							<li class="<?= $exists ? 'exists' : '' ?>">
 								<a class="tvdb-search-result" title="<?= html($show->Overview) ?>" data-id="<?= $show->seriesid ?>" data-name="<?= html($show->SeriesName) ?>" href="#<?= $show->seriesid ?>"><?= html($show->SeriesName) ?></a>

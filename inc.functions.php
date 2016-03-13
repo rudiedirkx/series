@@ -1,5 +1,45 @@
 <?php
 
+function get_url( $path, $query = array() ) {
+	$fragment = '';
+	if ( is_int($p = strpos($path, '#')) ) {
+		$fragment = substr($path, $p);
+		$path = substr($path, 0, $p);
+	}
+
+	$query = $query ? '?' . http_build_query($query) : '';
+	$path = $path ? $path . '.php' : basename($_SERVER['SCRIPT_NAME']);
+	return $path . $query . $fragment;
+}
+
+function do_redirect( $path, $query = array() ) {
+	$url = get_url($path, $query);
+	header('Location: ' . $url);
+}
+
+function is_logged_in( $act = true ) {
+	global $db;
+
+	if ( defined('USER_ID') ) {
+		return true;
+	}
+
+	session_start();
+	if ( $uid = @$_SESSION['series']['uid'] ) {
+		if ( $db->count('users', array('id' => $uid)) ) {
+			define('USER_ID', $_SESSION['series']['uid']);
+			return true;
+		}
+	}
+
+	if ( $act ) {
+		header('Location: login.php');
+		exit;
+	}
+
+	return false;
+}
+
 function html($str) {
 	return htmlspecialchars($str, ENT_COMPAT, 'UTF-8');
 }

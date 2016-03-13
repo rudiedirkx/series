@@ -3,8 +3,7 @@
 class Show extends db_generic_record {
 	static public function get( $id ) {
 		global $db;
-		$conditions = array('id' => $id);
-		defined('USER_ID') and $conditions['user_id'] = USER_ID;
+		$conditions = array('id' => $id, 'user_id' => USER_ID);
 		$show = $db->select('series', $conditions, null, 'Show')->first();
 		return $show;
 	}
@@ -63,6 +62,11 @@ class Show extends db_generic_record {
 
 	public function get_num_seasons() {
 		return count($this->seasons);
+	}
+
+	public function update( $data ) {
+		global $db;
+		return $db->update('series', $data, array('id' => $this->id));
 	}
 
 	public function updateTVDB() {

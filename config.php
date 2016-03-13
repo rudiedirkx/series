@@ -2,6 +2,8 @@
 
 require 'inc.bootstrap.php';
 
+is_logged_in(true);
+
 $options = Config::$options;
 $cfg = new Config;
 

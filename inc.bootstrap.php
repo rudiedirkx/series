@@ -2,6 +2,8 @@
 
 define('REQUEST_MICROTIME', microtime(1));
 
+require 'env.php';
+
 require 'inc.functions.php';
 
 require '../inc/db/db_sqlite.php'; // https://github.com/rudiedirkx/db_generic
@@ -15,6 +17,10 @@ if ( !$db ) {
 // Everything. UTF-8. Always. Everywhere.
 mb_internal_encoding('UTF-8');
 header('Content-type: text/html; charset=utf-8');
+
+// Env constants
+define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
+define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile')));
 
 // Load config structure
 require 'inc.config.php';

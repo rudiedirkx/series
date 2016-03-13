@@ -9,6 +9,7 @@ try {
 		SELECT *
 		FROM series
 		WHERE
+			user_id = " . USER_ID . " AND
 			(" . $lazyload . " OR (id = " . (int)$hilited . " AND active = 0))
 		ORDER BY
 			active DESC,
