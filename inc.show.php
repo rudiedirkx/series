@@ -65,6 +65,10 @@ class Show extends db_generic_record {
 	}
 
 	public function update( $data ) {
+		foreach ($data as $key => $value) {
+			$this->$key = $value;
+		}
+
 		global $db;
 		return $db->update('series', $data, array('id' => $this->id));
 	}
