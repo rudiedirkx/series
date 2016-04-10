@@ -47,7 +47,7 @@ if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_acti
 		}
 	}
 
-	exit('OK' . $id);
+	exit('OK' . $_POST['id']);
 }
 
 // New show
