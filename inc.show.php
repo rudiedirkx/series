@@ -17,16 +17,28 @@ class Show extends db_generic_record {
 		return $db->select_by_field('seasons', 'season', array('series_id' => $this->id))->all();
 	}
 
+	public function get_first_season() {
+		return array_reduce($this->seasons, function($first, $season) {
+			return !$first || $season->runs_from < $first->runs_from ? $season : $first;
+		});
+	}
+
+	public function get_last_season() {
+		return array_reduce($this->seasons, function($last, $season) {
+			return !$last || $season->runs_from > $last->runs_from ? $season : $last;
+		});
+	}
+
 	public function get_runs_from() {
 		if ( $this->seasons ) {
-			$season = $this->seasons[1];
+			$season = $this->first_season;
 			return $season->runs_from ?: null;
 		}
 	}
 
 	public function get_runs_to() {
 		if ( $this->seasons ) {
-			$season = $this->seasons[count($this->seasons)];
+			$season = $this->last_season;
 			return $season->runs_to ?: null;
 		}
 	}
