@@ -115,5 +115,6 @@ foreach ( $series AS $n => $show ) {
 	else {
 		echo "\t" . '<td class="icon watching"></td>' . "\n";
 	}
+	echo "\t" . '<td class="icon download"><a href="?downloadtvdb=' . $show->id . '"><img src="disk.png" /></a></td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
 }

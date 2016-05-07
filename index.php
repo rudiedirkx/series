@@ -299,6 +299,20 @@ else if ( isset($_GET['updateshow']) ) {
 	return do_redirect('index');
 }
 
+// download a show's TVDB info
+else if ( isset($_GET['downloadtvdb']) ) {
+	if ( $show = Show::get($_GET['downloadtvdb']) ) {
+		$filepath = tempnam(sys_get_temp_dir(), 'series_');
+		if ( $show->downloadTVDVInfo($filepath) ) {
+			header('Content-type: application/zip');
+			header('Content-disposition: attachment; filename="show-' . $show->id . '.zip"');
+			readfile($filepath);
+		}
+	}
+
+	exit;
+}
+
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
 	if ( $show = Show::get($_GET['resetshow']) ) {
@@ -353,7 +367,7 @@ else if ( isset($_GET['inactive']) ) {
 			<th class="info"></th>
 			<th class="missed">Not</th>
 			<th class="seasons" title="Existing seasons">S</th>
-			<th class="icon" colspan="2"></th>
+			<th class="icon" colspan="3"></th>
 		</tr>
 	</thead>
 	<tbody>

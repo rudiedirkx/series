@@ -85,19 +85,24 @@ class Show extends db_generic_record {
 		return $db->update('series', $data, array('id' => $this->id));
 	}
 
+	public function downloadTVDVInfo( $filepath ) {
+		$url = 'http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $this->tvdb_series_id . '/all/en.zip';
+		$context = stream_context_create(array('http' => array('timeout' => 2)));
+		$content = @file_get_contents($url, FALSE, $context);
+		if ( !$content ) {
+			return 0;
+		}
+		return file_put_contents($filepath, $content);
+	}
+
 	public function updateTVDB() {
 		global $db;
 
 		if ( $this->tvdb_series_id ) {
-			// get package with details
 			$zipfile = tempnam(sys_get_temp_dir(), 'series_');
-			$url = 'http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $this->tvdb_series_id . '/all/en.zip';
-			$context = stream_context_create(array('http' => array('timeout' => 2)));
-			$content = @file_get_contents($url, FALSE, $context);
-			if ( !$content ) {
+			if ( !$this->downloadTVDVInfo($zipfile) ) {
 				return false;
 			}
-			file_put_contents($zipfile, $content);
 
 			// read from it
 			$zip = new ZipArchive;
@@ -121,16 +126,9 @@ class Show extends db_generic_record {
 			// get seasons
 			$seasons = $runsFrom = $runsTo = array();
 			foreach ( $xml->Episode AS $episode ) {
-				// TV airings might have different episode/season numbers than DVD productions, so the number
-				// of episodes in a season depends on this constant, which should be a Config var.
-				if ( TVDB_DVD_OVER_TV ) {
-					$S = (int)(string)$episode->Combined_season;
-					$E = (int)(string)$episode->Combined_episodenumber;
-				}
-				else {
-					$S = (int)(string)$episode->SeasonNumber;
-					$E = (int)(string)$episode->EpisodeNumber;
-				}
+				// There are 3 season/episode sources in TVDB's data. See env.php.original
+				$S = (int) (string) $episode->{TVDB_DATA_FIELD_SEASON};
+				$E = (int) (string) $episode->{TVDB_DATA_FIELD_EPISODE};
 
 				if ( $S && $E ) {
 					$seasons[$S] = isset($seasons[$S]) ? max($seasons[$S], $E) : $E;
