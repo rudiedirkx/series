@@ -110,10 +110,10 @@ foreach ( $series AS $n => $show ) {
 		echo "\t" . '<td class="icon watching">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	}
 	elseif ( !$show->deleted ) {
-		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?delete=' . $show->id . '" title="Click to permanently hide."><img src="delete.png" alt="DELETE" /></a></td>' . "\n";
+		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?delete=' . $show->id . '" title="Click to visually hide."><img src="delete.png" alt="DELETE" /></a></td>' . "\n";
 	}
 	else {
-		echo "\t" . '<td class="icon watching"></td>' . "\n";
+		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?undelete=' . $show->id . '" title="Click to unhide."><img src="delete.png" alt="UNDELETE" /></a></td>' . "\n";
 	}
 	echo "\t" . '<td class="icon download"><a href="?downloadtvdb=' . $show->id . '"><img src="disk.png" /></a></td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";

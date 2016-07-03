@@ -224,6 +224,21 @@ else if ( isset($_GET['delete']) ) {
 	return do_redirect('index');
 }
 
+// Undelete show
+else if ( isset($_GET['undelete']) ) {
+	if ( $show = Show::get($_GET['undelete']) ) {
+		$show->update(array('deleted' => 0));
+
+		setcookie('series_hilited', $show->id);
+	}
+
+	if ( AJAX ) {
+		exit('OK');
+	}
+
+	return do_redirect('index');
+}
+
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
 	if ( $show = Show::get($_GET['watching']) ) {
