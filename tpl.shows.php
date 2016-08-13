@@ -107,7 +107,7 @@ foreach ( $series AS $n => $show ) {
 		echo "\t" . '<td class="icon active"></td>' . "\n";
 	}
 	if ( $show->active ) {
-		echo "\t" . '<td class="icon watching">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="arrow_right.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
+		echo "\t" . '<td class="icon watching">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="' . ($show->watching ? 'arrow_down' : 'arrow_up') . '.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	}
 	elseif ( !$show->deleted ) {
 		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?delete=' . $show->id . '" title="Click to visually hide."><img src="delete.png" alt="DELETE" /></a></td>' . "\n";
