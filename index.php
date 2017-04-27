@@ -362,6 +362,7 @@ else if ( isset($_GET['inactive']) ) {
 	<meta charset="utf-8" />
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<link rel="dns-prefetch" href="//thetvdb.com" />
 	<title>Series</title>
 	<style><?php require 'series.css' ?></style>
 </head>
@@ -483,7 +484,7 @@ function doAndRespond(o, d) {
 			return o.setHTML(rsp);
 		}
 
-		o.setHTML(rsp.next_episode);
+		o.setHTML(rsp.next_episode || '');
 		if ( rsp.season && rsp.episodes ) {
 			var title = 'Season ' + rsp.season + ' has ' + rsp.episodes + ' episodes. ';
 			if ( rsp.season_from && rsp.season_to ) {
@@ -602,7 +603,7 @@ $('series')
 		}
 	})
 	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {
-		var src = 'http://thetvdb.com/banners/' + this.ancestor('tr').data('banner');
+		var src = '//thetvdb.com/banners/' + this.ancestor('tr').data('banner');
 		$('banner').attr('src', src).show();
 
 		this.on('mouseout', this._onmouseout = function(e) {

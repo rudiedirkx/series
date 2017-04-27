@@ -185,6 +185,8 @@ class Show extends db_generic_record {
 				'season_to' => $season_to,
 			);
 		}
+
+		return array();
 	}
 
 }
