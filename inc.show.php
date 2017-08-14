@@ -145,9 +145,10 @@ class Show extends db_generic_record {
 
 			// save seasons
 			$db->begin();
-			$db->delete('seasons', array('series_id' => $this->id));
+			$db->delete('seasons', array('series_id' => $this->id, 'edited' => 0));
+			$overriddenSeasons = $db->select_fields('seasons', 'season, season', ['series_id' => $this->id, 'edited' => 1]);
 			foreach ( $seasons AS $S => $E ) {
-				if ( isset($runsFrom[$S], $runsTo[$S]) ) {
+				if ( !isset($overriddenSeasons[$S]) && isset($runsFrom[$S], $runsTo[$S]) ) {
 					$db->insert('seasons', array(
 						'series_id' => $this->id,
 						'season' => $S,

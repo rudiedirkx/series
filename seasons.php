@@ -4,13 +4,13 @@ require 'inc.bootstrap.php';
 
 is_logged_in(true);
 
-if ( isset($_POST['seasons'], $_POST['episodes']) ) {
+if ( isset($_POST['episodes']) ) {
 	header('Content-type: text/plain; charset=utf-8');
 
 	$db->begin();
 	foreach ( $_POST['episodes'] as $sid => $seasons ) {
 		foreach ( $seasons as $season => $eps ) {
-			$db->update('seasons', ['episodes' => $eps], ['series_id' => $sid, 'season' => $season]);
+			$db->update('seasons', ['episodes' => $eps, 'edited' => 1], ['series_id' => $sid, 'season' => $season]);
 		}
 	}
 	$db->commit();
@@ -48,7 +48,7 @@ tr.active {
 				<? foreach ($seasons as $season): if ($season->series_id == $show->id): ?>
 					<tr class="<? if ($season->season == (int) $show->next_episode): ?>active<? endif ?>">
 						<td><?= $season->season ?></td>
-						<td><input name="episodes[<?= $show->id ?>][<?= $season->season ?>]" value="<?= $season->episodes ?>" size="2" /></td>
+						<td><input onchange="this.name=this.dataset.name" data-name="episodes[<?= $show->id ?>][<?= $season->season ?>]" value="<?= $season->episodes ?>" size="2" /></td>
 						<td><?= date('M Y', strtotime($season->runs_from)) . ' - ' . date('M Y', strtotime($season->runs_to)) ?></td>
 					</tr>
 				<? endif; endforeach ?>
