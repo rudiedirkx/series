@@ -26,12 +26,4 @@ define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile'
 require 'inc.config.php';
 $cfg = new Config;
 
-// Verify db schema
-if ( !$cfg->last_db_schema_sync || $cfg->last_db_schema_sync < strtotime('-1 hour') ) {
-	$schema = require 'inc.db-schema.php';
-	$db->schema($schema);
-
-	// REPLACE INTO or MERGE won't work, because `variables` doesn't have a pk
-	$db->delete('variables', array('name' => 'last_db_schema_sync'));
-	$db->insert('variables', array('name' => 'last_db_schema_sync', 'value' => time()));
-}
+require 'inc.ensure-db-schema.php';
