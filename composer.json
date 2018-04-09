@@ -3,7 +3,7 @@
     "description": "Very simple series admin (tv shows, episodes)",
     "type": "project",
     "require": {
-        "rdx/db": "^1.3"
+        "rdx/db": "^1.6"
     },
     "autoload": {
         "files": [

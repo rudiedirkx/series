@@ -300,13 +300,13 @@ else if ( isset($_GET['updateshow']) ) {
 		$success = $show->updateTVDB();
 		if ( $success === true ) {
 			$rsp = 'OK';
+			setcookie('series_hilited', $id);
 		}
 		else if ( $success === false ) {
 			$rsp = 'Something failed. TVDB gone?';
 		}
 	}
 
-	setcookie('series_hilited', $id);
 	if ( AJAX ) {
 		exit($rsp);
 	}

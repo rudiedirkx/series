@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac3acdee0e36d24a18a8f36a56932c34",
+    "content-hash": "1d9485f7235fc2c8151e46646f683361",
     "packages": [
         {
             "name": "rdx/db",
-            "version": "1.3",
+            "version": "1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rudiedirkx/db_generic.git",
-                "reference": "4caaaf25429a23e8031b72df3decd227b388f128"
+                "reference": "abc8ed35cfa2529e111d3f134b09ce66652fe170"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/4caaaf25429a23e8031b72df3decd227b388f128",
-                "reference": "4caaaf25429a23e8031b72df3decd227b388f128",
+                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/abc8ed35cfa2529e111d3f134b09ce66652fe170",
+                "reference": "abc8ed35cfa2529e111d3f134b09ce66652fe170",
                 "shasum": ""
             },
             "type": "library",
@@ -39,7 +39,7 @@
                 }
             ],
             "description": "Simple MySQL/SQLite wrapper",
-            "time": "2017-12-26T17:33:08+00:00"
+            "time": "2018-04-08T20:57:55+00:00"
         }
     ],
     "packages-dev": [],

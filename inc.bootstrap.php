@@ -10,6 +10,8 @@ if ( !$db ) {
 	exit("<p>Que pasa, amigo!? I can't read from or write to the database! Do you have a writable ./db/ folder? <strong>No bueno!</strong></p>");
 }
 
+$db->ensureSchema(require 'inc.db-schema.php');
+
 // Everything. UTF-8. Always. Everywhere.
 mb_internal_encoding('UTF-8');
 header('Content-type: text/html; charset=utf-8');
@@ -21,5 +23,3 @@ define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile'
 // Load config structure
 require 'inc.config.php';
 $cfg = new Config;
-
-require 'inc.ensure-db-schema.php';
