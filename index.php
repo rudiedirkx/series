@@ -1,22 +1,8 @@
 <?php
 
-## tvdb
-# get mirror
-#   http://www.thetvdb.com/api/94F0BD0D5948FE69/mirrors.xml
-# get show id
-#   http://www.thetvdb.com/api/GetSeries.php?seriesname=community
-# get show details/episodes/etc
-#   http://www.thetvdb.com/api/94F0BD0D5948FE69/series/<seriesid>/all/en.zip
-
-# 1. get server time
-# 2. http://www.thetvdb.com/api/Updates.php?type=all&time=1318015462
-# 3. store in vars[last_tvdb_update]
-# 4. get info from tvdb
-# 5. store in series.data
-
+use rdx\series\Show;
 
 require 'inc.bootstrap.php';
-require 'inc.show.php';
 
 is_logged_in(true);
 
@@ -35,7 +21,7 @@ $skip = $cfg->dont_load_inactive;
 
 // Link a show to TVDB, pt II
 if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_action']) && $_POST['_action'] == 'save' ) {
-	if ( $show = Show::get($_POST['id']) ) {
+	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array(
 			'name' => $_POST['name'],
 			'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
@@ -60,7 +46,7 @@ else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 	}
 
 	if ( isset($_POST['id']) ) {
-		$linkingShow = Show::get($_POST['id']);
+		$linkingShow = Show::find($_POST['id']);
 	}
 
 	$insert = array(
@@ -88,7 +74,7 @@ else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 	$db->insert('series', $insert);
 	$id = $db->insert_id();
 
-	if ( $show = Show::get($id) ) {
+	if ( $show = Show::find($id) ) {
 		$show->updateTVDB();
 	}
 
@@ -97,7 +83,7 @@ else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 
 // Edit scrollable field: next
 else if ( isset($_POST['id'], $_POST['dir']) ) {
-	if ( $show = Show::get($_POST['id']) ) {
+	if ( $show = Show::find($_POST['id']) ) {
 		if ( 0 != (int)$_POST['dir'] ) {
 			$delta = $_POST['dir'] < 0 ? -1 : 1;
 
@@ -160,7 +146,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 
 // Edit field: next
 else if ( isset($_POST['id'], $_POST['next_episode']) ) {
-	if ( $show = Show::get($_POST['id']) ) {
+	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array(
 			'next_episode' => $_POST['next_episode'],
 			'changed' => time(),
@@ -177,7 +163,7 @@ else if ( isset($_POST['id'], $_POST['next_episode']) ) {
 
 // Edit field: missed
 else if ( isset($_POST['id'], $_POST['missed']) ) {
-	if ( $show = Show::get($_POST['id']) ) {
+	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array('missed' => $_POST['missed'], 'changed' => time()));
 	}
 
@@ -186,7 +172,7 @@ else if ( isset($_POST['id'], $_POST['missed']) ) {
 
 // Edit field: name
 else if ( isset($_POST['id'], $_POST['name']) ) {
-	if ( $show = Show::get($_POST['id']) ) {
+	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array('name' => $_POST['name'], 'changed' => time()));
 	}
 
@@ -195,7 +181,7 @@ else if ( isset($_POST['id'], $_POST['name']) ) {
 
 // Toggle active status
 else if ( isset($_GET['id'], $_GET['active']) ) {
-	if ( $show = Show::get($_GET['id']) ) {
+	if ( $show = Show::find($_GET['id']) ) {
 		$active = (bool)$_GET['active'];
 
 		$update = array('active' => $active, 'changed' => time());
@@ -213,7 +199,7 @@ else if ( isset($_GET['id'], $_GET['active']) ) {
 
 // Delete show
 else if ( isset($_GET['delete']) ) {
-	if ( $show = Show::get($_GET['delete']) ) {
+	if ( $show = Show::find($_GET['delete']) ) {
 		$show->update(array('deleted' => 1));
 	}
 
@@ -226,7 +212,7 @@ else if ( isset($_GET['delete']) ) {
 
 // Undelete show
 else if ( isset($_GET['undelete']) ) {
-	if ( $show = Show::get($_GET['undelete']) ) {
+	if ( $show = Show::find($_GET['undelete']) ) {
 		$show->update(array('deleted' => 0));
 
 		setcookie('series_hilited', $show->id);
@@ -241,7 +227,7 @@ else if ( isset($_GET['undelete']) ) {
 
 // Set current/watching show
 else if ( isset($_GET['watching']) ) {
-	if ( $show = Show::get($_GET['watching']) ) {
+	if ( $show = Show::find($_GET['watching']) ) {
 
 		// Toggle selected
 		if ( $cfg->max_watching > 1 ) {
@@ -278,7 +264,7 @@ else if ( isset($_GET['watching']) ) {
 else if ( isset($_GET['linkshow']) ) {
 	$id = (int)$_GET['linkshow'];
 
-	if ( $linkingShow = Show::get($id) ) {
+	if ( $linkingShow = Show::find($id) ) {
 		if ( !$linkingShow->tvdb_series_id ) {
 			$name = $_POST['name'] = $linkingShow->name;
 			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name);
@@ -296,7 +282,7 @@ else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
 	$rsp = "Invalid id/show";
-	if ( $show = Show::get($id) ) {
+	if ( $show = Show::find($id) ) {
 		$success = $show->updateTVDB();
 		if ( $success === true ) {
 			$rsp = 'OK';
@@ -316,7 +302,7 @@ else if ( isset($_GET['updateshow']) ) {
 
 // download a show's TVDB info
 else if ( isset($_GET['downloadtvdb']) ) {
-	if ( $show = Show::get($_GET['downloadtvdb']) ) {
+	if ( $show = Show::find($_GET['downloadtvdb']) ) {
 		$filepath = tempnam(sys_get_temp_dir(), 'series_');
 		if ( $show->downloadTVDVInfo($filepath) ) {
 			header('Content-type: application/zip');
@@ -330,7 +316,7 @@ else if ( isset($_GET['downloadtvdb']) ) {
 
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
-	if ( $show = Show::get($_GET['resetshow']) ) {
+	if ( $show = Show::find($_GET['resetshow']) ) {
 		// delete seasons/episodes
 		$db->delete('seasons', array('series_id' => $_GET['resetshow']));
 

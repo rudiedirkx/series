@@ -1,6 +1,9 @@
 <?php
 
+namespace rdx\series;
+
 class Config {
+
 	static public $options = array(
 		'search_inactives' => array(
 			'title' => 'Direct-search through inactive shows with JS',
@@ -76,6 +79,5 @@ class Config {
 
 		return isset($this->vars[$name]) ? $this->vars[$name] : $alt;
 	}
+
 }
-
-

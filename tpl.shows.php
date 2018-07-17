@@ -1,34 +1,34 @@
 <?php
 
+use rdx\series\Show;
+
 $lazyload = $async || $skip ? 'active = ' . (int)!isset($_GET['inactive']) : '1';
 $watching = $cfg->watching_up_top ? '(watching > 0) DESC,' : '';
 $sortable = $cfg->sortable ? 'o ASC,' : '';
 
 try {
-	$series = $db->fetch("
+	$series = Show::query("
 		SELECT *
 		FROM series
 		WHERE
 			user_id = " . USER_ID . " AND
-			(" . $lazyload . " OR (id = " . (int)$hilited . " AND active = 0))
+			(" . $lazyload . " OR (id = " . (int) $hilited . " AND active = 0))
 		ORDER BY
 			active DESC,
 			" . $watching . "
 			" . $sortable . "
 			LOWER(IF('the ' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC
-	", 'Show');
+	");
+	Show::eager('seasons', $series);
 }
 catch ( db_exception $ex ) {
 	exit('Query error: ' . $ex->getMessage() . "\n");
 }
 
-$showNames = array();
 $_active = true;
 foreach ( $series AS $n => $show ) {
-	$showNames[] = mb_strtolower($show->name);
-
-	if ( !$lazyload && $_active != (bool)$show->active ) {
-		$_active = (bool)$show->active;
+	if ( !$lazyload && $_active != (bool) $show->active ) {
+		$_active = (bool) $show->active;
 
 		echo '</tbody>';
 		if ( $cfg->search_inactives ) {
@@ -37,7 +37,7 @@ foreach ( $series AS $n => $show ) {
 		echo '<tbody id="shows-inactive">';
 	}
 
-	$classes = array();
+	$classes = [];
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
 

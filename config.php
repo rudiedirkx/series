@@ -1,11 +1,12 @@
 <?php
 
+use rdx\series\Config;
+
 require 'inc.bootstrap.php';
 
 is_logged_in(true);
 
 $options = Config::$options;
-$cfg = new Config;
 
 if ( isset($_POST['cfg']) ) {
 	$values = array();

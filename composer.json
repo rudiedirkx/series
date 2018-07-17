@@ -3,9 +3,12 @@
     "description": "Very simple series admin (tv shows, episodes)",
     "type": "project",
     "require": {
-        "rdx/db": "^1.6"
+        "rdx/db": "^1.9"
     },
     "autoload": {
+        "psr-4": {
+            "rdx\\series\\": "src/"
+        },
         "files": [
             "inc.functions.php"
         ]

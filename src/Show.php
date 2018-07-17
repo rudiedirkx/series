@@ -1,49 +1,48 @@
 <?php
 
-class Show extends db_generic_record {
-	static public function get( $id ) {
-		global $db;
-		$conditions = array('id' => $id, 'user_id' => USER_ID);
-		$show = $db->select('series', $conditions, null, 'Show')->first();
-		return $show;
-	}
+namespace rdx\series;
 
-	public function get_current_season() {
+use ZipArchive;
+
+class Show extends UserModel {
+
+	static public $_table = 'series';
+
+	protected function get_current_season() {
 		return (int)$this->next_episode;
 	}
 
-	public function get_seasons() {
-		global $db;
-		return $db->select_by_field('seasons', 'season', array('series_id' => $this->id))->all();
+	protected function relate_seasons() {
+		return $this->to_many(Season::class, 'series_id');
 	}
 
-	public function get_first_season() {
+	protected function get_first_season() {
 		return array_reduce($this->seasons, function($first, $season) {
 			return !$first || $season->runs_from < $first->runs_from ? $season : $first;
 		});
 	}
 
-	public function get_last_season() {
+	protected function get_last_season() {
 		return array_reduce($this->seasons, function($last, $season) {
 			return !$last || $season->runs_from > $last->runs_from ? $season : $last;
 		});
 	}
 
-	public function get_runs_from() {
+	protected function get_runs_from() {
 		if ( $this->seasons ) {
 			$season = $this->first_season;
 			return $season->runs_from ?: null;
 		}
 	}
 
-	public function get_runs_to() {
+	protected function get_runs_to() {
 		if ( $this->seasons ) {
 			$season = $this->last_season;
 			return $season->runs_to ?: null;
 		}
 	}
 
-	public function get_pretty_runs_from() {
+	protected function get_pretty_runs_from() {
 		if ( $this->runs_from ) {
 			return date('M Y', strtotime($this->runs_from));
 		}
@@ -51,7 +50,7 @@ class Show extends db_generic_record {
 		return '?';
 	}
 
-	public function get_pretty_runs_to() {
+	protected function get_pretty_runs_to() {
 		if ( $this->runs_to ) {
 			return date('M Y', strtotime($this->runs_to));
 		}
@@ -59,12 +58,12 @@ class Show extends db_generic_record {
 		return '?';
 	}
 
-	public function get_season() {
+	protected function get_season() {
 		$seasons = $this->seasons; // Don't error suppress, because of __get magic
 		return @$seasons[$this->current_season]; // No magic here, so do error suppress
 	}
 
-	public function get_total_episodes() {
+	protected function get_total_episodes() {
 		$episodes = 0;
 		foreach ( $this->seasons as $season ) {
 			$episodes += $season->episodes;
@@ -72,17 +71,8 @@ class Show extends db_generic_record {
 		return $episodes;
 	}
 
-	public function get_num_seasons() {
+	protected function get_num_seasons() {
 		return count($this->seasons);
-	}
-
-	public function update( $data ) {
-		foreach ($data as $key => $value) {
-			$this->$key = $value;
-		}
-
-		global $db;
-		return $db->update('series', $data, array('id' => $this->id));
 	}
 
 	public function downloadTVDVInfo( $filepath ) {
