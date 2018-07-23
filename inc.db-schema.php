@@ -1,7 +1,7 @@
 <?php
 
 return array(
-	'version' => 2,
+	'version' => 3,
 	'tables' => array(
 		'users' => array(
 			'id' => array('pk' => true),
@@ -29,6 +29,7 @@ return array(
 			'changed' => array('null' => false, 'unsigned' => true, 'default' => 0),
 		),
 		'seasons' => array(
+			'id' => array('pk' => true),
 			'series_id' => array('unsigned' => true),
 			'season' => array('unsigned' => true),
 			'episodes' => array('unsigned' => true),
