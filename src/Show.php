@@ -13,7 +13,7 @@ class Show extends UserModel {
 	}
 
 	protected function relate_seasons() {
-		return $this->to_many(Season::class, 'series_id');
+		return $this->to_many(Season::class, 'series_id')->key('season');
 	}
 
 	protected function get_first_season() {

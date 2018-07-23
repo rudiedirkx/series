@@ -576,15 +576,10 @@ $('series')
 	.on('mouseleave', '.next.oc a', function(e) {
 		this.removeClass('eligible');
 	})
-	.on('mousewheel', '.next.oc a', function(e) {
-		var direction = 'number' == typeof e.originalEvent.wheelDelta ? -e.originalEvent.wheelDelta : e.originalEvent.detail;
-		// Firefox messes up here... It doesn't cancel the scroll event. If I move
-		// the preventDefault to the top of this function, sometimes it does cancel
-		// the event (and sometimes it doesn't!?). Very strange behaviour that I can't
-		// seem to reproduce in http://jsfiddle.net/rudiedirkx/dDW63/show/ (always works).
-		if ( this.hasClass('eligible') && direction ) {
+	.on('wheel', '.next.oc a', function(e) {
+		if ( this.hasClass('eligible') ) {
 			e.preventDefault();
-			direction /= -Math.abs(direction);
+			var direction = e.originalEvent.deltaY > 0 ? -1 : 1;
 			doAndRespond(this, 'id=' + this.ancestor('tr').attr('showid') + '&dir=' + direction);
 		}
 	})
