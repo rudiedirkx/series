@@ -76,7 +76,6 @@ tr.filtered-out {
 	span.edit-title,
 	tr > .picture,
 	tr > .missed,
-	tr > .icon.watching,
 	tr > .icon.download {
 		display: none;
 	}
