@@ -87,7 +87,7 @@ foreach ( $series AS $n => $show ) {
 		$title = ' title="' . html($show->description) . '"';
 	}
 
-	echo '<tr class="' . implode(' ', $classes) . '" id="show-' . $show->id . '" showid="' . $show->id . '"' . $banner . '>' . "\n";
+	echo '<tr class="' . implode(' ', $classes) . '" data-showid="' . $show->id . '"' . $banner . '>' . "\n";
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}

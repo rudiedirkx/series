@@ -16,6 +16,7 @@ a { text-decoration: none; }
 a[href] { text-decoration: underline; }
 .name .show-name { color: red; }
 tr.active .show-name { color: green; }
+tr.add-exists .show-name { font-weight: bold; }
 td.seasons { text-align: center; }
 td.oc a { display: block; text-decoration: none; color: black; }
 td.oc a:hover { background-color: #ccc; }

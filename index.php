@@ -566,7 +566,7 @@ $('series')
 			if ( this.hasClass('eligible') ) {
 				e.preventDefault();
 				var direction = up ? 1 : -1;
-				doAndRespond(this, 'id=' + this.ancestor('tr').attr('showid') + '&dir=' + direction);
+				doAndRespond(this, 'id=' + this.ancestor('tr').data('showid') + '&dir=' + direction);
 			}
 		}
 	})
@@ -580,7 +580,7 @@ $('series')
 		if ( this.hasClass('eligible') ) {
 			e.preventDefault();
 			var direction = e.originalEvent.deltaY > 0 ? -1 : 1;
-			doAndRespond(this, 'id=' + this.ancestor('tr').attr('showid') + '&dir=' + direction);
+			doAndRespond(this, 'id=' + this.ancestor('tr').data('showid') + '&dir=' + direction);
 		}
 	})
 	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {

@@ -15,18 +15,26 @@
 		</p>
 
 		<?if (@$adding_show_tvdb_result):?>
-			<script>window.on('load', function() { scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight); });</script>
+			<script>
+			window.on('load', function() {
+				scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
+			});
+			$$('.add-exists').removeClass('add-exists');
+			</script>
 
 			<?if (!is_scalar($adding_show_tvdb_result)):?>
 				<div class="search-results">
 					<ul>
 						<?foreach ($adding_show_tvdb_result->Series AS $show):
-							$exists = $db->count('series', array('tvdb_series_id' => $show->seriesid, 'user_id' => USER_ID));
+							$exists = $db->select_one('series', 'id', ['tvdb_series_id' => $show->seriesid, 'user_id' => USER_ID]);
 							?>
 							<li class="<?= $exists ? 'exists' : '' ?>">
 								<a class="tvdb-search-result" title="<?= html($show->Overview) ?>" data-id="<?= $show->seriesid ?>" data-name="<?= html($show->SeriesName) ?>" href="#<?= $show->seriesid ?>"><?= html($show->SeriesName) ?></a>
 								(<?= date('Y', strtotime((string)$show->FirstAired)) ?>)
-								<?if ($exists):?>(<strong>you have this</strong>)<?endif?>
+								<?if ($exists):?>
+									(<strong>you have this</strong>)
+									<script>$('[data-showid="<?= $exists ?>"]', true).addClass('add-exists');</script>
+								<?endif?>
 								(<a target="_blank" href="http://www.thetvdb.com/?tab=series&id=<?= $show->seriesid ?>">=&gt;</a>)
 								<div class="tvdb-search-result-description"><?= html($show->Overview) ?></div>
 							</li>
