@@ -1,8 +1,25 @@
 <?php
 
+use rdx\series\Season;
+use rdx\series\Show;
+
 require 'inc.bootstrap.php';
 
 is_logged_in(true);
+
+if ( isset($_POST['add_season']) ) {
+	$show = Show::find($_POST['add_season']);
+	$seasons = array_keys($show->seasons);
+	$max = $seasons ? max($seasons) : 0;
+	Season::insert([
+		'series_id' => $show->id,
+		'season' => $max + 1,
+		'edited' => 1,
+	]);
+
+	echo 'OK';
+	exit;
+}
 
 if ( isset($_POST['episodes']) ) {
 	header('Content-type: text/plain; charset=utf-8');
@@ -41,9 +58,13 @@ tr.active {
 <form accept method="post">
 	<table border="1">
 		<? foreach ($series as $show): ?>
-			<tbody>
+			<tbody data-showid="<?= $show->id ?>">
 				<tr>
-					<th colspan="3"><a href="#" onclick="return toggleShow(this)"><?= html($show->name) ?></a></th>
+					<th colspan="3">
+						<a href="#" onclick="return toggleShow(this)"><?= html($show->name) ?></a>
+						&nbsp;
+						<a href="#" onclick="return addSeason(this)">+</a>
+					</th>
 				</tr>
 				<? foreach ($seasons as $season): if ($season->series_id == $show->id): ?>
 					<tr class="<? if ($season->season == (int) $show->next_episode): ?>active<? endif ?>">
@@ -52,11 +73,6 @@ tr.active {
 						<td><?= date('M Y', strtotime($season->runs_from)) . ' - ' . date('M Y', strtotime($season->runs_to)) ?></td>
 					</tr>
 				<? endif; endforeach ?>
-				<!-- <tr>
-					<td><input name="seasons[<?= $show->id ?>]" size="2" /></td>
-					<td><input name="episodes[<?= $show->id ?>][0]" size="2" /></td>
-					<td></td>
-				</tr> -->
 			</tbody>
 		<? endforeach ?>
 	</table>
@@ -65,8 +81,31 @@ tr.active {
 
 <script>
 function toggleShow(a) {
-	var tr = a.parentNode.parentNode;
+	var tr = a.closest('tr');
 	tr.classList.toggle('open');
 	return false;
 }
+
+function addSeason(a) {
+	var tbody = a.closest('tbody');
+	var id = tbody.dataset.showid;
+	var xhr = new XMLHttpRequest;
+	xhr.open('post', '?', true);
+	xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+	xhr.onload = function(e) {
+		if (this.responseText === 'OK') {
+			location.reload();
+		}
+		else {
+			alert(this.responseText);
+		}
+	};
+	xhr.send('add_season=' + id);
+	return false;
+}
 </script>
+
+<details>
+	<summary><?= count($db->queries) ?> queries</summary>
+	<ol><li><?= implode('</li><li>', $db->queries) ?></li></ol>
+</details>
