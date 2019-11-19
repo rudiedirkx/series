@@ -97,7 +97,7 @@ class Show extends UserModel {
 			// read from it
 			$zip = new ZipArchive;
 			$zip->open($zipfile);
-			$xml = $zip->getFromName('en.xml');
+			$xml = $zip->getFromName('en.xml') ?: $zip->getFromName('en.zip.xml');
 			$zip->close();
 
 			// delete it, no cache
