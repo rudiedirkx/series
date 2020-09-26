@@ -3,6 +3,8 @@
     "description": "Very simple series admin (tv shows, episodes)",
     "type": "project",
     "require": {
+        "php": "^7.3",
+        "ext-pdo_sqlite": "*",
         "rdx/db": "^1.10"
     },
     "autoload": {

@@ -1,23 +1,23 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "838ae59088640cc87fa1c2884cbefc28",
+    "content-hash": "c828357bac5a725cff38047af4ffdc7e",
     "packages": [
         {
             "name": "rdx/db",
-            "version": "1.10",
+            "version": "1.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rudiedirkx/db_generic.git",
-                "reference": "8a446ed6af54c83a48a4651170b1d18114748f3a"
+                "reference": "5988585f6d19d8afc9d096178a4d0db11d2f058b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/8a446ed6af54c83a48a4651170b1d18114748f3a",
-                "reference": "8a446ed6af54c83a48a4651170b1d18114748f3a",
+                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/5988585f6d19d8afc9d096178a4d0db11d2f058b",
+                "reference": "5988585f6d19d8afc9d096178a4d0db11d2f058b",
                 "shasum": ""
             },
             "type": "library",
@@ -39,7 +39,7 @@
                 }
             ],
             "description": "Simple MySQL/SQLite wrapper",
-            "time": "2018-07-23T13:50:18+00:00"
+            "time": "2020-05-02T09:32:23+00:00"
         }
     ],
     "packages-dev": [],
@@ -48,6 +48,10 @@
     "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
-    "platform-dev": []
+    "platform": {
+        "php": "^7.3",
+        "ext-pdo_sqlite": "*"
+    },
+    "platform-dev": [],
+    "plugin-api-version": "1.1.0"
 }
