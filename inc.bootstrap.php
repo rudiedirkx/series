@@ -5,7 +5,7 @@ use rdx\series\Model;
 
 define('REQUEST_MICROTIME', microtime(1));
 
-require 'env.php';
+require __DIR__ . '/inc.bootstrap-env.php';
 require __DIR__ . '/vendor/autoload.php';
 
 // Heroku
