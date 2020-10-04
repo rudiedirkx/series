@@ -7,7 +7,7 @@
         "ext-mbstring": "*",
         "ext-pdo_sqlite": "*",
         "ext-pdo_pgsql": "*",
-        "rdx/db": "^1.17"
+        "rdx/db": "^1.18"
     },
     "autoload": {
         "psr-4": {

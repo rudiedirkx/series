@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c6c23530e9be926d930d6dafce6d896a",
+    "content-hash": "46f26ff5fe83628561048e3ef209ddf7",
     "packages": [
         {
             "name": "rdx/db",
-            "version": "1.17",
+            "version": "1.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rudiedirkx/db_generic.git",
-                "reference": "78ba18b3668188fca9f2c4cbc3d0e1419e50667a"
+                "reference": "ab21d2c342f75544a7636853ad6a2be84fb5d024"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/78ba18b3668188fca9f2c4cbc3d0e1419e50667a",
-                "reference": "78ba18b3668188fca9f2c4cbc3d0e1419e50667a",
+                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/ab21d2c342f75544a7636853ad6a2be84fb5d024",
+                "reference": "ab21d2c342f75544a7636853ad6a2be84fb5d024",
                 "shasum": ""
             },
             "type": "library",
@@ -37,7 +37,7 @@
                 }
             ],
             "description": "Simple MySQL/SQLite wrapper",
-            "time": "2020-10-04T20:15:11+00:00"
+            "time": "2020-10-04T22:14:31+00:00"
         }
     ],
     "packages-dev": [],
