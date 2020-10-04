@@ -4,6 +4,7 @@
     "type": "project",
     "require": {
         "php": "^7.3",
+        "ext-mbstring": "*",
         "ext-pdo_sqlite": "*",
         "ext-pdo_pgsql": "*",
         "rdx/db": "^1.17"

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ac0095c6c5ed7349ae9cb2261d5a7885",
+    "content-hash": "c6c23530e9be926d930d6dafce6d896a",
     "packages": [
         {
             "name": "rdx/db",
@@ -48,6 +48,7 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^7.3",
+        "ext-mbstring": "*",
         "ext-pdo_sqlite": "*",
         "ext-pdo_pgsql": "*"
     },
