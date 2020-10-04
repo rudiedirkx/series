@@ -8,7 +8,19 @@ define('REQUEST_MICROTIME', microtime(1));
 require 'env.php';
 require __DIR__ . '/vendor/autoload.php';
 
-$db = db_sqlite::open(array('database' => __DIR__ . '/db/series.sqlite3'));
+// Heroku
+if ( $uri = getenv('DATABASE_URL') ) {
+	$uri = preg_replace('#^postgres://#', '', $uri);
+	$db = db_pgsql::open(array('uri' => $uri));
+}
+// Heroku/pgsql test
+elseif ( defined('HEROKU_PG_URI') && HEROKU_PG_URI ) {
+	$db = db_pgsql::open(array('uri' => HEROKU_PG_URI));
+}
+// Local
+else {
+	$db = db_sqlite::open(array('database' => __DIR__ . '/db/series.sqlite3'));
+}
 $db->ensureSchema(require 'inc.db-schema.php');
 
 Model::$_db = $db;

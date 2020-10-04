@@ -245,7 +245,7 @@ else if ( isset($_GET['watching']) ) {
 				$allWatching = $db->select_fields('series', 'id, watching', 'watching > 0 AND user_id = ? ORDER BY watching DESC, id DESC', USER_ID);
 				$allWatching = array_keys($allWatching);
 				$illegallyWatching = array_slice($allWatching, $cfg->max_watching);
-				$db->update('series', array('watching' => 0), array('id' => $illegallyWatching, 'user_id' => USER_ID));
+				count($illegallyWatching) and $db->update('series', array('watching' => 0), array('id' => $illegallyWatching, 'user_id' => USER_ID));
 			}
 		}
 		// Only selected (no toggle, just ON)

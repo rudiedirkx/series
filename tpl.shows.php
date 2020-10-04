@@ -2,7 +2,7 @@
 
 use rdx\series\Show;
 
-$lazyload = $async || $skip ? 'active = ' . (int)!isset($_GET['inactive']) : '1';
+$lazyload = $async || $skip ? 'active = ' . (int)!isset($_GET['inactive']) : '1=1';
 $watching = $cfg->watching_up_top ? '(watching > 0) DESC,' : '';
 $sortable = $cfg->sortable ? 'o ASC,' : '';
 
@@ -17,7 +17,7 @@ try {
 			active DESC,
 			" . $watching . "
 			" . $sortable . "
-			LOWER(IF('the ' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC
+			LOWER(CASE WHEN LOWER(SUBSTR(name, 1, 4)) like 'the ' THEN SUBSTR(name, 5) ELSE name END) ASC
 	");
 	Show::eager('seasons', $series);
 }

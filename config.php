@@ -30,7 +30,7 @@ if ( isset($_POST['cfg']) ) {
 	exit;
 }
 
-$total = $db->count('series', '1');
+$total = $db->count('series', '1=1');
 $active = $db->count('series', 'active = ?', array(1));
 $watching = $db->count('series', 'watching >= ?', array(1));
 $withTvdb = $db->count('series', "tvdb_series_id <> '0'");

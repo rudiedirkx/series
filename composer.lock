@@ -4,28 +4,26 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c828357bac5a725cff38047af4ffdc7e",
+    "content-hash": "ac0095c6c5ed7349ae9cb2261d5a7885",
     "packages": [
         {
             "name": "rdx/db",
-            "version": "1.16",
+            "version": "1.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rudiedirkx/db_generic.git",
-                "reference": "5988585f6d19d8afc9d096178a4d0db11d2f058b"
+                "reference": "78ba18b3668188fca9f2c4cbc3d0e1419e50667a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/5988585f6d19d8afc9d096178a4d0db11d2f058b",
-                "reference": "5988585f6d19d8afc9d096178a4d0db11d2f058b",
+                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/78ba18b3668188fca9f2c4cbc3d0e1419e50667a",
+                "reference": "78ba18b3668188fca9f2c4cbc3d0e1419e50667a",
                 "shasum": ""
             },
             "type": "library",
             "autoload": {
                 "classmap": [
-                    "db_generic.php",
-                    "db_mysql.php",
-                    "db_sqlite.php"
+                    "./"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -39,7 +37,7 @@
                 }
             ],
             "description": "Simple MySQL/SQLite wrapper",
-            "time": "2020-05-02T09:32:23+00:00"
+            "time": "2020-10-04T20:15:11+00:00"
         }
     ],
     "packages-dev": [],
@@ -50,7 +48,8 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^7.3",
-        "ext-pdo_sqlite": "*"
+        "ext-pdo_sqlite": "*",
+        "ext-pdo_pgsql": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "1.1.0"

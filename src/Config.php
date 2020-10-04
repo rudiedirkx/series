@@ -57,7 +57,7 @@ class Config {
 	function loadVars() {
 		global $db;
 
-		$this->vars = $db->select_fields('variables', 'name, value', '1');
+		$this->vars = $db->select_fields('variables', 'name, value', '1=1');
 	}
 
 	function ensureVars() {

@@ -5,7 +5,8 @@
     "require": {
         "php": "^7.3",
         "ext-pdo_sqlite": "*",
-        "rdx/db": "^1.10"
+        "ext-pdo_pgsql": "*",
+        "rdx/db": "^1.17"
     },
     "autoload": {
         "psr-4": {
