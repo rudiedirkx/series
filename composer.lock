@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "rdx/db",
-            "version": "1.18",
+            "version": "1.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rudiedirkx/db_generic.git",
-                "reference": "ab21d2c342f75544a7636853ad6a2be84fb5d024"
+                "reference": "1aa7f35859821879490082ac2ea06e7d11c29374"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/ab21d2c342f75544a7636853ad6a2be84fb5d024",
-                "reference": "ab21d2c342f75544a7636853ad6a2be84fb5d024",
+                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/1aa7f35859821879490082ac2ea06e7d11c29374",
+                "reference": "1aa7f35859821879490082ac2ea06e7d11c29374",
                 "shasum": ""
             },
             "type": "library",
@@ -37,7 +37,11 @@
                 }
             ],
             "description": "Simple MySQL/SQLite wrapper",
-            "time": "2020-10-04T22:14:31+00:00"
+            "support": {
+                "issues": "https://github.com/rudiedirkx/db_generic/issues",
+                "source": "https://github.com/rudiedirkx/db_generic/tree/1.20"
+            },
+            "time": "2021-02-10T23:13:36+00:00"
         }
     ],
     "packages-dev": [],
@@ -53,5 +57,5 @@
         "ext-pdo_pgsql": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "1.1.0"
+    "plugin-api-version": "2.0.0"
 }

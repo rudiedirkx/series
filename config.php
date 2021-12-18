@@ -50,8 +50,8 @@ label { font-weight: bold; display: block; }
 		?>
 		<p>
 			<input type="hidden" name="options[]" value="<?= $name ?>" />
-			<label for="cfg_<?= $name ?>"><?= $el['title'] ?></label>
-			<input id="cfg_<?= $name ?>" <?= $value ?> name="cfg[<?= $name ?>]" type="<?= $el['type'] ?>" <?= attributes($el, array('type', 'default')) ?> />
+			<label for="cfg_<?= $name ?>"><?= html($el['title']) ?></label>
+			<input id="cfg_<?= $name ?>" <?= $value ?> name="cfg[<?= $name ?>]" type="<?= $el['type'] ?>" <?= attributes($el, array('type', 'default', 'title')) ?> />
 		</p>
 
 	<? endforeach ?>

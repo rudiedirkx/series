@@ -11,24 +11,24 @@ table.loading { opacity: 0.5; }
 tbody tr { background-color: #eee; }
 tbody tr:nth-child(even) { background-color: #ddd; }
 tbody tr.hilited td { background-color: lightblue; }
-td, th { border: solid 1px #fff; vertical-align: middle; }
+td, th { border: solid 1px #fff; vertical-align: middle; text-align: left; }
 a { text-decoration: none; }
 a[href] { text-decoration: underline; }
 .name .show-name { color: red; }
 tr.active .show-name { color: green; }
 tr.add-exists .show-name { font-weight: bold; }
-td.seasons { text-align: center; }
+th.seasons, td.seasons { text-align: center; }
 td.oc a { display: block; text-decoration: none; color: black; }
 td.oc a:hover { background-color: #ccc; }
 td.oc a.eligible, td.oc a.eligible:hover { background-color: #faa; color: #000; }
 a.eligible { -webkit-transform: scale(1.3); -moz-transform: scale(1.3); -ms-transform: scale(1.3); transform: scale(1.3); }
-td.next a, td.missed a { color: #888; }
+td.next a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 tr.deleted td { opacity: 0.25; background: yellow; }
-td.icon { padding-right: 4px; padding-left: 4px; }
+td.icon { padding-right: 2px; padding-left: 2px; }
 tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
-td:not(.move) img { width: 16px; height: 16px; display: block; }
+td:not(.move):not(.name) img { width: 16px; height: 16px; display: block; }
 td.move { cursor: move; }
 tr:target td,
 tr.hilite td {
@@ -45,7 +45,7 @@ tr.hilite td {
 #loading-more td {
 	background: url(spinner.gif) no-repeat center center;
 }
-body:not(.show-all) #tb-search {
+#tb-inactive:empty {
 	display: none;
 }
 #tb-search {
@@ -73,15 +73,14 @@ tr.filtered-out {
 		display: none !important;
 	}
 }
-@media (max-width: 426px) {
-	span.edit-title,
+@media (max-width: 505px) {
+	.edit-title,
 	tr > .picture,
-	tr > .missed,
 	tr > .icon.download {
 		display: none;
 	}
 }
-@media (min-width: 400px) {
+@media (min-width: 505px) {
 	tr > .info {
 		display: none;
 	}

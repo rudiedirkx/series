@@ -1,5 +1,10 @@
 <?php
 
+function html_asset( $src ) {
+	$buster = '?_' . filemtime($src);
+	return $src . $buster;
+}
+
 function get_url( $path, $query = array() ) {
 	$fragment = '';
 	if ( is_int($p = strpos($path, '#')) ) {

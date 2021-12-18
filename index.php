@@ -7,8 +7,8 @@ require 'inc.bootstrap.php';
 is_logged_in(true);
 
 // Get and reset highlighted show
-$hilited = (int)@$_GET['series_hilited'] ?: (int)@$_COOKIE['series_hilited'];
-if ( $hilited ) {
+$hilited = (int) ($_GET['series_hilited'] ?? $_COOKIE['series_hilited'] ?? 0);
+if ( isset($_COOKIE['series_hilited']) ) {
 	setcookie('series_hilited', '', 1);
 }
 
@@ -159,15 +159,6 @@ else if ( isset($_POST['id'], $_POST['next_episode']) ) {
 	}
 
 	exit($_POST['next_episode']);
-}
-
-// Edit field: missed
-else if ( isset($_POST['id'], $_POST['missed']) ) {
-	if ( $show = Show::find($_POST['id']) ) {
-		$show->update(array('missed' => $_POST['missed'], 'changed' => time()));
-	}
-
-	exit($_POST['missed']);
 }
 
 // Edit field: name
@@ -334,11 +325,24 @@ else if ( isset($_GET['keepalive']) ) {
 	exit('OK');
 }
 
-// lazy/async load inactive shows
-else if ( isset($_GET['inactive']) ) {
+// search inactive
+else if ( isset($_GET['search']) ) {
+	$search = trim($_GET['search']);
+	$series = strlen($search) ? Show::all("
+		user_id = ? AND id <> ? AND active = '0' AND name LIKE ?
+		ORDER BY LOWER(REGEXP_REPLACE('^(the|a) ', '', name)) ASC
+	", [USER_ID, $hilited, "%$search%"]) : [];
+	Show::eager('seasons', $series);
+
 	require 'tpl.shows.php';
 	exit;
 }
+
+$series = Show::all("
+	user_id = ? AND (active = '1' OR id = ?)
+	ORDER BY active DESC, (watching <> 0) DESC, LOWER(REGEXP_REPLACE('^(the|a) ', '', name)) ASC
+", [USER_ID, $hilited]);
+Show::eager('seasons', $series);
 
 ?>
 <!doctype html>
@@ -348,9 +352,9 @@ else if ( isset($_GET['inactive']) ) {
 	<meta charset="utf-8" />
 	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="dns-prefetch" href="//thetvdb.com" />
+	<link rel="dns-prefetch" href="https://thetvdb.com" />
 	<title>Series</title>
-	<style><?php require 'series.css' ?></style>
+	<link rel="stylesheet" href="<?= html_asset('series.css') ?>" />
 </head>
 
 <body>
@@ -361,23 +365,23 @@ else if ( isset($_GET['inactive']) ) {
 	<thead>
 		<tr class="hd" bgcolor="#bbbbbb">
 			<th class="tvdb"></th>
-			<th>Name <a href="javascript:$('showname').focus();void(0);">+</a></th>
+			<th>Name</th>
 			<? if ($cfg->banners): ?>
 				<th class="picture"></th>
 			<? endif ?>
 			<th class="next">Nxt</th>
 			<th class="info"></th>
-			<th class="missed">Not</th>
 			<th class="seasons" title="Existing seasons">S</th>
-			<th class="icon" colspan="3"></th>
+			<th class="icon active"></th>
+			<th class="icon watching"></th>
+			<th class="icon download"></th>
 		</tr>
 	</thead>
-	<tbody>
+	<tbody id="tb-active">
 		<?php require 'tpl.shows.php' ?>
 	</tbody>
-	<? if ($cfg->search_inactives && ($async || $skip)): ?>
-		<?php require 'tpl.search.php' ?>
-	<? endif ?>
+	<?php require 'tpl.search.php' ?>
+	<tbody id="tb-inactive"></tbody>
 </table>
 
 <script src="rjs.js"></script>
@@ -398,37 +402,6 @@ var timer = 0;
 			}, 200);
 		}
 	});
-<? endif ?>
-
-<? if ($async || $skip): ?>
-	function startLazyLoad(delay) {
-		var $series = $('series');
-		var $loadingMore = document.el('tbody').attr('id', 'loading-more').addClass('loading-more').setHTML('<tr><td colspan="9">&nbsp;</td></tr>').inject($series);
-		setTimeout(function() {
-			$loadingMore.addClass('loading');
-			$.get('?inactive=1&series_hilited=<?= $hilited ?>').on('done', function(e, html) {
-				$loadingMore.remove();
-				document.el('tbody', {"id": 'shows-inactive'}).setHTML(html).inject($series);
-				document.body.addClass('show-all');
-			});
-		}, delay || 1);
-	}
-	<? if ($skip): ?>
-		var $series = $('series');
-		var $loadMore = document.el('tbody').attr('id', 'load-more').addClass('load-more').setHTML('<tr><td colspan="9"><a href>Load the rest</a></td></tr>').inject($series);
-		$loadMore.getElement('a').on('click', function(e) {
-			e.preventDefault();
-
-			$loadMore.remove();
-			startLazyLoad();
-		});
-	<? else: ?>
-		window.on('load', function(e) {
-			startLazyLoad(2000);
-		});
-	<? endif ?>
-<? else: ?>
-	document.body.addClass('show-all');
 <? endif ?>
 
 function RorA(t, fn) {
@@ -486,45 +459,25 @@ function doAndRespond(o, d) {
 	return false;
 }
 
-<? if ($cfg->search_inactives && ($async || $skip)): ?>
-	document.on('keydown', function(e) {
-		if ( document.activeElement.matches('body, a') ) {
-			if ( e.which == 191 ) { // slash
-				e.preventDefault();
-				try {
-					$('load-more').getElement('a').click();
-				}
-				catch (ex) {
-					$('search').focus();
-				}
-			}
-		}
-	});
-	var trs;
-	$('search')
-		.on('input', function(e) {
-			if ( !trs ) {
-				trs = new Elements($('shows-inactive').rows);
-				trs.forEach(function(tr) {
-					var span = tr.getElement('.show-name');
-					tr._txt = (span.textContent + ' ' + (span.title || '')).toLowerCase();
-				});
-			}
+document.on('keyup', function(e) {
+	if ( e.originalEvent.code == 'Slash' && document.activeElement.matches('body, a') ) {
+		$('search').focus();
+	}
+});
 
-			var q = this.value.trim().toLowerCase();
-			if ( !q ) {
-				trs.removeClass('filtered-out');
-			}
-			else {
-				trs.forEach(function(tr) {
-					var match = tr._txt.indexOf(q) != -1,
-						method = match ? 'removeClass' : 'addClass';
-					tr[method]('filtered-out');
-				});
-			}
-		})
-	;
-<? endif ?>
+$('search').on('input', function(e) {
+	var q = this.value.trim();
+	if (q.length == 0) {
+		$('tb-inactive').setHTML('');
+	}
+	else if (q.length >= 2) {
+		console.time('search');
+		fetch('?series_hilited=<?= $hilited ?>&search=' + encodeURIComponent(q)).then(x => x.text()).then(html => {
+			$('tb-inactive').setHTML(html);
+			console.timeEnd('search');
+		});
+	}
+});
 
 var lastAlive = Date.now();
 document.on('mousemove', function(e) {
@@ -583,8 +536,8 @@ $('series')
 			doAndRespond(this, 'id=' + this.ancestor('tr').data('showid') + '&dir=' + direction);
 		}
 	})
-	.on('mouseover', 'tr[data-banner] .show-banner', function(e) {
-		var src = '//thetvdb.com/banners/' + this.ancestor('tr').data('banner');
+	.on('mouseover', 'tr[data-banner] .show-banner .show-name', function(e) {
+		var src = 'https://thetvdb.com/banners/' + this.ancestor('tr').data('banner');
 		$('banner').attr('src', src).show();
 
 		this.on('mouseout', this._onmouseout = function(e) {

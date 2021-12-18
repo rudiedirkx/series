@@ -13,7 +13,6 @@ return array(
 			'user_id' => array('unsigned' => true, 'default' => 1),
 			'name' => array('null' => false),
 			'next_episode' => array('null' => false, 'default' => ''),
-			'missed' => array('null' => false, 'default' => ''),
 			'active' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 1),
 			'url' => array('null' => false, 'default' => ''),
 			'deleted' => array('null' => false, 'unsigned' => true, 'size' => 1, 'default' => 0),

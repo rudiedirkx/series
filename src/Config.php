@@ -5,26 +5,6 @@ namespace rdx\series;
 class Config {
 
 	static public $options = array(
-		'search_inactives' => array(
-			'title' => 'Direct-search through inactive shows with JS',
-			'type' => 'checkbox',
-			'default' => 0,
-		),
-		'async_inactive' => array(
-			'title' => 'Lazy/async load inactive shows (on mobile)',
-			'type' => 'checkbox',
-			'default' => 0,
-		),
-		'dont_load_inactive' => array(
-			'title' => "DON'T load inactive shows (all devices)",
-			'type' => 'checkbox',
-			'default' => 0,
-		),
-		'watching_up_top' => array(
-			'title' => 'Show `watching` shows first (before `active`)',
-			'type' => 'checkbox',
-			'default' => 1,
-		),
 		'max_watching' => array(
 			'title' => 'Max no. of `watching` shows',
 			'type' => 'number',
