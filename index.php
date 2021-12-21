@@ -416,7 +416,7 @@ function RorA(t, fn) {
 
 function changeName(id, name) {
 	$.post('', 'id=' + id + '&name=' + encodeURIComponent(name)).on('done', function(e, t) {
-		$('show-name-' + id).setHTML(t);
+		$('show-name-' + id).setText(t);
 	});
 	return false;
 }
