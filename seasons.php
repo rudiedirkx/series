@@ -36,10 +36,12 @@ if ( isset($_POST['episodes']) ) {
 	exit;
 }
 
-$series = $db->select('series', "1 ORDER BY LOWER(IF('the ' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC", 'Show');
-$seasons = $db->select('seasons', '1 ORDER BY season')->all();
+$series = Show::all("1=1 ORDER BY LOWER(IF('the ' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC");
+Show::eager('seasons', $series);
 
 ?>
+<title>Seasons</title>
+
 <style>
 table {
 	border-spacing: 0;
@@ -66,13 +68,13 @@ tr.active {
 						<a href="#" onclick="return addSeason(this)">+</a>
 					</th>
 				</tr>
-				<? foreach ($seasons as $season): if ($season->series_id == $show->id): ?>
+				<? foreach ($show->seasons as $season): ?>
 					<tr class="<? if ($season->season == (int) $show->next_episode): ?>active<? endif ?>">
 						<td><?= $season->season ?></td>
 						<td><input onchange="this.name=this.dataset.name" data-name="episodes[<?= $show->id ?>][<?= $season->season ?>]" value="<?= $season->episodes ?>" size="2" /></td>
 						<td><?= date('M Y', strtotime($season->runs_from)) . ' - ' . date('M Y', strtotime($season->runs_to)) ?></td>
 					</tr>
-				<? endif; endforeach ?>
+				<? endforeach ?>
 			</tbody>
 		<? endforeach ?>
 	</table>

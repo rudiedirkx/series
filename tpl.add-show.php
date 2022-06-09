@@ -12,6 +12,7 @@
 		<p>
 			<button name="_action" value="search" class="submit">Search</button>
 			<button name="_action" value="save">Save</button>
+			<a href="seasons.php" style="float: right">seasons</a>
 		</p>
 
 		<?if (@$adding_show_tvdb_result):?>
