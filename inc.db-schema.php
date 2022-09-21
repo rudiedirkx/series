@@ -1,7 +1,9 @@
 <?php
 
+use rdx\series\Show;
+
 return array(
-	'version' => 3,
+	'version' => 4,
 	'tables' => array(
 		'users' => array(
 			'id' => array('pk' => true),
@@ -24,6 +26,7 @@ return array(
 			'description',
 			'tvtorrents_show_id',
 			'dailytvtorrents_name',
+			'imdb_id',
 			'created' => array('null' => false, 'unsigned' => true, 'default' => 0),
 			'changed' => array('null' => false, 'unsigned' => true, 'default' => 0),
 		),
@@ -41,4 +44,18 @@ return array(
 			'value' => array('type' => 'text'),
 		),
 	),
+	'updates' => [
+		1 => function($db) {
+			Show::$_db = $db;
+			$shows = Show::all("imdb_id is null and data like '%IMDB_ID%'");
+			foreach ($shows as $show) {
+				$data = json_decode($show->data, true);
+				if (is_string($data['IMDB_ID'] ?? 0)) {
+					$show->update([
+						'imdb_id' => $data['IMDB_ID'],
+					]);
+				}
+			}
+		},
+	],
 );

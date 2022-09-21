@@ -4,26 +4,29 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "46f26ff5fe83628561048e3ef209ddf7",
+    "content-hash": "1dccc9f2e7f4cd376aa9205c21b1ece3",
     "packages": [
         {
             "name": "rdx/db",
-            "version": "1.20",
+            "version": "1.25",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rudiedirkx/db_generic.git",
-                "reference": "1aa7f35859821879490082ac2ea06e7d11c29374"
+                "reference": "e4dd4b6026b5baf643c71e6d54038af03654d80d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/1aa7f35859821879490082ac2ea06e7d11c29374",
-                "reference": "1aa7f35859821879490082ac2ea06e7d11c29374",
+                "url": "https://api.github.com/repos/rudiedirkx/db_generic/zipball/e4dd4b6026b5baf643c71e6d54038af03654d80d",
+                "reference": "e4dd4b6026b5baf643c71e6d54038af03654d80d",
                 "shasum": ""
             },
             "type": "library",
             "autoload": {
                 "classmap": [
                     "./"
+                ],
+                "exclude-from-classmap": [
+                    "/test/"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -39,9 +42,9 @@
             "description": "Simple MySQL/SQLite wrapper",
             "support": {
                 "issues": "https://github.com/rudiedirkx/db_generic/issues",
-                "source": "https://github.com/rudiedirkx/db_generic/tree/1.20"
+                "source": "https://github.com/rudiedirkx/db_generic/tree/1.25"
             },
-            "time": "2021-02-10T23:13:36+00:00"
+            "time": "2022-09-21T21:49:08+00:00"
         }
     ],
     "packages-dev": [],
@@ -51,11 +54,11 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.3",
+        "php": "^8.0",
         "ext-mbstring": "*",
         "ext-pdo_sqlite": "*",
         "ext-pdo_pgsql": "*"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.0.0"
+    "plugin-api-version": "2.3.0"
 }

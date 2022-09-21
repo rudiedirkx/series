@@ -3,11 +3,11 @@
     "description": "Very simple series admin (tv shows, episodes)",
     "type": "project",
     "require": {
-        "php": "^7.3",
+        "php": "^8.0",
         "ext-mbstring": "*",
         "ext-pdo_sqlite": "*",
         "ext-pdo_pgsql": "*",
-        "rdx/db": "^1.18"
+        "rdx/db": "^1.25"
     },
     "autoload": {
         "psr-4": {

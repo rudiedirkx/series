@@ -106,12 +106,12 @@ class Show extends UserModel {
 			$xml = simplexml_load_string($xml);
 			$data = (array)$xml->Series;
 
-			// save description
-			$db->update('series', array(
+			$this->update([
 				'description' => $data['Overview'],
+				'imdb_id' => ($data['IMDB_ID'] ?? null) ?: null,
 				'data' => json_encode($data),
 				'changed' => time(),
-			), array('id' => $this->id));
+			]);
 
 			// get seasons
 			$seasons = $runsFrom = $runsTo = array();

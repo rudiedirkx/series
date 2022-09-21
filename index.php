@@ -369,6 +369,7 @@ Show::eager('seasons', $series);
 			<? if ($cfg->banners): ?>
 				<th class="picture"></th>
 			<? endif ?>
+			<th class="picture"></th>
 			<th class="next">Nxt</th>
 			<th class="info"></th>
 			<th class="seasons" title="Existing seasons">S</th>
