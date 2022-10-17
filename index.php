@@ -350,7 +350,9 @@ Show::eager('seasons', $series);
 
 <head>
 	<meta charset="utf-8" />
-	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico" />
+	<link rel="icon" type="image/png" href="favicon-128.png" sizes="128x128" />
+	<link rel="icon" href="favicon.ico" type="image/x-icon" />
+	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="dns-prefetch" href="https://thetvdb.com" />
 	<title>Series</title>
