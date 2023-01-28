@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1dccc9f2e7f4cd376aa9205c21b1ece3",
+    "content-hash": "7d7f80d92c14b3facad048cd1ad67918",
     "packages": [
         {
             "name": "rdx/db",
@@ -60,5 +60,8 @@
         "ext-pdo_pgsql": "*"
     },
     "platform-dev": [],
+    "platform-overrides": {
+        "php": "8.0.25"
+    },
     "plugin-api-version": "2.3.0"
 }

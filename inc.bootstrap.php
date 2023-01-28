@@ -30,7 +30,7 @@ mb_internal_encoding('UTF-8');
 header('Content-type: text/html; charset=utf-8');
 
 // Env constants
-define('AJAX', strtolower(@$_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
-define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile')));
+define('AJAX', strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') == 'xmlhttprequest');
+define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? ''), 'mobile')));
 
 $cfg = new Config;

@@ -23,5 +23,12 @@
             "name": "Rudie Dirkx",
             "email": "github@hotblocks.nl"
         }
-    ]
+    ],
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "platform": {
+            "php": "8.0.25"
+        }
+    }
 }
