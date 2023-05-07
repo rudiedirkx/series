@@ -42,7 +42,7 @@ if ( isset($_POST['id'], $_POST['name'], $_POST[$remote->field], $_POST['_action
 }
 
 // New show
-else if ( isset($_POST['name'], $_POST[$remote->field]) ) {
+elseif ( isset($_POST['name'], $_POST[$remote->field]) ) {
 	$action = @$_POST['_action'] ?: 'search';
 
 	$name = trim($_POST['name']);
@@ -78,7 +78,7 @@ else if ( isset($_POST['name'], $_POST[$remote->field]) ) {
 }
 
 // Edit scrollable field: next
-else if ( isset($_POST['id'], $_POST['dir']) ) {
+elseif ( isset($_POST['id'], $_POST['dir']) ) {
 	if ( $show = Show::find($_POST['id']) ) {
 		if ( 0 != (int)$_POST['dir'] ) {
 			$delta = $_POST['dir'] < 0 ? -1 : 1;
@@ -106,7 +106,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 					}
 				}
 				// Moving up
-				else if ( isset($show->seasons[$S]) && $E > $show->seasons[$S]->episodes ) {
+				elseif ( isset($show->seasons[$S]) && $E > $show->seasons[$S]->episodes ) {
 					$S += 1;
 					$E = 1;
 				}
@@ -141,7 +141,7 @@ else if ( isset($_POST['id'], $_POST['dir']) ) {
 }
 
 // Edit field: next
-else if ( isset($_POST['id'], $_POST['next_episode']) ) {
+elseif ( isset($_POST['id'], $_POST['next_episode']) ) {
 	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array(
 			'next_episode' => $_POST['next_episode'],
@@ -158,7 +158,7 @@ else if ( isset($_POST['id'], $_POST['next_episode']) ) {
 }
 
 // Edit field: name
-else if ( isset($_POST['id'], $_POST['name']) ) {
+elseif ( isset($_POST['id'], $_POST['name']) ) {
 	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array('name' => $_POST['name'], 'changed' => time()));
 	}
@@ -167,7 +167,7 @@ else if ( isset($_POST['id'], $_POST['name']) ) {
 }
 
 // Toggle active status
-else if ( isset($_GET['id'], $_GET['active']) ) {
+elseif ( isset($_GET['id'], $_GET['active']) ) {
 	if ( $show = Show::find($_GET['id']) ) {
 		$active = (bool)$_GET['active'];
 
@@ -185,7 +185,7 @@ else if ( isset($_GET['id'], $_GET['active']) ) {
 }
 
 // Delete show
-else if ( isset($_GET['delete']) ) {
+elseif ( isset($_GET['delete']) ) {
 	if ( $show = Show::find($_GET['delete']) ) {
 		$show->update(array('deleted' => 1));
 	}
@@ -198,7 +198,7 @@ else if ( isset($_GET['delete']) ) {
 }
 
 // Undelete show
-else if ( isset($_GET['undelete']) ) {
+elseif ( isset($_GET['undelete']) ) {
 	if ( $show = Show::find($_GET['undelete']) ) {
 		$show->update(array('deleted' => 0));
 
@@ -213,7 +213,7 @@ else if ( isset($_GET['undelete']) ) {
 }
 
 // Set current/watching show
-else if ( isset($_GET['watching']) ) {
+elseif ( isset($_GET['watching']) ) {
 	if ( $show = Show::find($_GET['watching']) ) {
 
 		// Toggle selected
@@ -247,8 +247,26 @@ else if ( isset($_GET['watching']) ) {
 	return do_redirect('index');
 }
 
+// Link a show to TVDB, pt I
+elseif ( isset($_GET['linkshow']) ) {
+	$id = (int)$_GET['linkshow'];
+
+	if ( $linkingShow = Show::find($id) ) {
+		if ( !$linkingShow->{$remote->field} ) {
+			$name = $_POST['name'] = $linkingShow->name;
+
+			$remote->init();
+			$remote->search($name);
+			require 'tpl.add-show.php';
+			exit;
+		}
+	}
+
+	exit('Some error. Whatever.');
+}
+
 // Update one show
-else if ( isset($_GET['updateshow']) ) {
+elseif ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
 	$rsp = "Invalid id/show";
@@ -258,7 +276,7 @@ else if ( isset($_GET['updateshow']) ) {
 			$rsp = 'OK';
 			setcookie('series_hilited', $id);
 		}
-		else if ( $success === false ) {
+		elseif ( $success === false ) {
 			$rsp = 'Something failed. TVDB gone?';
 		}
 	}
@@ -271,7 +289,7 @@ else if ( isset($_GET['updateshow']) ) {
 }
 
 // reset one show
-else if ( isset($_GET['resetshow']) ) {
+elseif ( isset($_GET['resetshow']) ) {
 	if ( $show = Show::find($_GET['resetshow']) ) {
 		// delete seasons/episodes
 		$db->delete('seasons', ['series_id' => $show->id]);
@@ -286,14 +304,14 @@ else if ( isset($_GET['resetshow']) ) {
 }
 
 // keep db hot
-else if ( isset($_GET['keepalive']) ) {
+elseif ( isset($_GET['keepalive']) ) {
 	$db->delete('variables', array('name' => 'keepalive'));
 	$db->insert('variables', array('name' => 'keepalive', 'value' => time()));
 	exit('OK');
 }
 
 // search inactive
-else if ( isset($_GET['search']) ) {
+elseif ( isset($_GET['search']) ) {
 	$search = trim($_GET['search']);
 	$series = strlen($search) ? Show::all("
 		user_id = ? AND id <> ? AND active = '0' AND name LIKE ?
@@ -521,7 +539,7 @@ $('series')
 			src = $img.attr('src');
 		$img.attr('src', 'loading16.gif');
 
-		var handler = this.hasClass('update') ? function(e) {
+		var handler = this.hasClass('updateshow') ? function(e) {
 			var t = this.responseText;
 			if ( !RorA(t) ) {
 				$img.attr('src', src);
