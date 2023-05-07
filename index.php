@@ -1,10 +1,15 @@
 <?php
 
+use rdx\imdb\AuthSession;
+use rdx\imdb\Client;
+use rdx\series\RemoteImdb;
 use rdx\series\Show;
 
 require 'inc.bootstrap.php';
 
 is_logged_in(true);
+
+$remote = new RemoteImdb(new Client(new AuthSession(IMDB_AT_MAIN, IMDB_UBID_MAIN)));
 
 // Get and reset highlighted show
 $hilited = (int) ($_GET['series_hilited'] ?? $_COOKIE['series_hilited'] ?? 0);
@@ -20,16 +25,16 @@ $skip = $cfg->dont_load_inactive;
 
 
 // Link a show to TVDB, pt II
-if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_action']) && $_POST['_action'] == 'save' ) {
+if ( isset($_POST['id'], $_POST['name'], $_POST[$remote->field], $_POST['_action']) && $_POST['_action'] == 'save' ) {
 	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array(
 			'name' => $_POST['name'],
-			'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
+			$remote->field => $_POST[$remote->field] ?: 0,
 			'changed' => time(),
 		));
 
-		if ( $_POST['tvdb_series_id'] ) {
-			$show->updateTVDB();
+		if ( $_POST[$remote->field] ) {
+			$show->updateRemote();
 		}
 	}
 
@@ -37,7 +42,7 @@ if ( isset($_POST['id'], $_POST['name'], $_POST['tvdb_series_id'], $_POST['_acti
 }
 
 // New show
-else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
+else if ( isset($_POST['name'], $_POST[$remote->field]) ) {
 	$action = @$_POST['_action'] ?: 'search';
 
 	$name = trim($_POST['name']);
@@ -49,36 +54,27 @@ else if ( isset($_POST['name'], $_POST['tvdb_series_id']) ) {
 		$linkingShow = Show::find($_POST['id']);
 	}
 
-	$insert = array(
-		'user_id' => USER_ID,
-		'name' => $name,
-		'tvdb_series_id' => $_POST['tvdb_series_id'] ?: 0,
-		'deleted' => 0,
-		'active' => 1,
-		'watching' => 0,
-		'created' => time(),
-	);
-
 	// Search
 	if ( $action == 'search' ) {
-		$adding_show_tvdb_result = null;
-		if ( $name ) {
-			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name);
-			$adding_show_tvdb_result = simplexml_load_file($url);
-		}
+		$remote->init();
+		$remote->search($name);
 		require 'tpl.add-show.php';
 		exit;
 	}
 
 	// Save
-	$db->insert('series', $insert);
-	$id = $db->insert_id();
+	$show = Show::create([
+		'user_id' => USER_ID,
+		'name' => $name,
+		$remote->field => $_POST[$remote->field] ?? null,
+		'deleted' => 0,
+		'active' => 1,
+		'watching' => 0,
+		'created' => time(),
+	]);
+	$show->updateRemote();
 
-	if ( $show = Show::find($id) ) {
-		$show->updateTVDB();
-	}
-
-	exit('OK' . $id);
+	exit('OK' . $show->id);
 }
 
 // Edit scrollable field: next
@@ -251,30 +247,13 @@ else if ( isset($_GET['watching']) ) {
 	return do_redirect('index');
 }
 
-// Link a show to TVDB, pt I
-else if ( isset($_GET['linkshow']) ) {
-	$id = (int)$_GET['linkshow'];
-
-	if ( $linkingShow = Show::find($id) ) {
-		if ( !$linkingShow->tvdb_series_id ) {
-			$name = $_POST['name'] = $linkingShow->name;
-			$url = 'http://www.thetvdb.com/api/GetSeries.php?seriesname=' . urlencode($name);
-			$adding_show_tvdb_result = simplexml_load_file($url);
-			require 'tpl.add-show.php';
-			exit;
-		}
-	}
-
-	exit('Some error. Whatever.');
-}
-
 // Update one show
 else if ( isset($_GET['updateshow']) ) {
 	$id = (int)$_GET['updateshow'];
 
 	$rsp = "Invalid id/show";
 	if ( $show = Show::find($id) ) {
-		$success = $show->updateTVDB();
+		$success = $show->updateRemote();
 		if ( $success === true ) {
 			$rsp = 'OK';
 			setcookie('series_hilited', $id);
@@ -291,28 +270,16 @@ else if ( isset($_GET['updateshow']) ) {
 	return do_redirect('index');
 }
 
-// download a show's TVDB info
-else if ( isset($_GET['downloadtvdb']) ) {
-	if ( $show = Show::find($_GET['downloadtvdb']) ) {
-		$filepath = tempnam(sys_get_temp_dir(), 'series_');
-		if ( $show->downloadTVDVInfo($filepath) ) {
-			header('Content-type: application/zip');
-			header('Content-disposition: attachment; filename="show-' . $show->id . '.zip"');
-			readfile($filepath);
-		}
-	}
-
-	exit;
-}
-
 // reset one show
 else if ( isset($_GET['resetshow']) ) {
 	if ( $show = Show::find($_GET['resetshow']) ) {
 		// delete seasons/episodes
-		$db->delete('seasons', array('series_id' => $_GET['resetshow']));
+		$db->delete('seasons', ['series_id' => $show->id]);
 
-		// delete tvdb series id
-		$db->update('series', array('tvdb_series_id' => 0, 'changed' => time()), array('id' => $_GET['resetshow']));
+		$show->update([
+			$remote->field => null,
+			'changed' => time(),
+		]);
 	}
 
 	return do_redirect('index');
@@ -354,7 +321,6 @@ Show::eager('seasons', $series);
 	<link rel="icon" href="favicon.ico" type="image/x-icon" />
 	<link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="dns-prefetch" href="https://thetvdb.com" />
 	<title>Series</title>
 	<link rel="stylesheet" href="<?= html_asset('series.css') ?>" />
 </head>
@@ -540,7 +506,7 @@ $('series')
 		}
 	})
 	.on('mouseover', 'tr[data-banner] .show-banner .show-name', function(e) {
-		var src = 'https://thetvdb.com/banners/' + this.ancestor('tr').data('banner');
+		var src = this.ancestor('tr').data('banner');
 		$('banner').attr('src', src).show();
 
 		this.on('mouseout', this._onmouseout = function(e) {

@@ -4,10 +4,8 @@
     "type": "project",
     "require": {
         "php": "^8.0",
-        "ext-mbstring": "*",
-        "ext-pdo_sqlite": "*",
-        "ext-pdo_pgsql": "*",
-        "rdx/db": "^1.25"
+        "rdx/db": "^1.25",
+        "rdx/imdb-user-api": "dev-master"
     },
     "autoload": {
         "psr-4": {
@@ -30,5 +28,8 @@
         "platform": {
             "php": "8.0.25"
         }
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^6.0"
     }
 }

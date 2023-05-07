@@ -75,83 +75,37 @@ class Show extends UserModel {
 		return count($this->seasons);
 	}
 
-	public function downloadTVDVInfo( $filepath ) {
-		$url = 'http://www.thetvdb.com/api/' . TVDB_API_KEY . '/series/' . $this->tvdb_series_id . '/all/en.zip';
-		$context = stream_context_create(array('http' => array('timeout' => 2)));
-		$content = @file_get_contents($url, FALSE, $context);
-		if ( !$content ) {
-			return 0;
-		}
-		return file_put_contents($filepath, $content);
+	public function updateRemote() : bool {
+		return $this->updateImdb();
 	}
 
-	public function updateTVDB() {
-		global $db;
+	public function updateImdb() : bool {
+		$result = $GLOBALS['remote']->getInfo($this->imdb_id);
+		if (!$result) return false;
 
-		if ( $this->tvdb_series_id ) {
-			$zipfile = tempnam(sys_get_temp_dir(), 'series_');
-			if ( !$this->downloadTVDVInfo($zipfile) ) {
-				return false;
-			}
-
-			// read from it
-			$zip = new ZipArchive;
-			$zip->open($zipfile);
-			$xml = $zip->getFromName('en.xml') ?: $zip->getFromName('en.zip.xml');
-			$zip->close();
-
-			// delete it, no cache
-			unlink($zipfile);
-
-			$xml = simplexml_load_string($xml);
-			$data = (array)$xml->Series;
-
+		self::$_db->transaction(function($db) use ($result) {
 			$this->update([
-				'description' => $data['Overview'],
-				'imdb_id' => ($data['IMDB_ID'] ?? null) ?: null,
-				'data' => json_encode($data),
+				'description' => $result->plot,
+				'banner_url' => $result->banner,
 				'changed' => time(),
 			]);
 
-			// get seasons
-			$seasons = $runsFrom = $runsTo = array();
-			foreach ( $xml->Episode AS $episode ) {
-				// There are 3 season/episode sources in TVDB's data. See env.php.original
-				$S = (int) (string) $episode->{TVDB_DATA_FIELD_SEASON};
-				$E = (int) (string) $episode->{TVDB_DATA_FIELD_EPISODE};
-
-				if ( $S && $E ) {
-					$seasons[$S] = isset($seasons[$S]) ? max($seasons[$S], $E) : $E;
-
-					$aired = (string)$episode->FirstAired;
-					if ( $aired ) {
-						$date = date('Y-m-d', is_numeric($aired) ? $aired : strtotime($aired));
-
-						$runsFrom[$S] = isset($runsFrom[$S]) ? min($runsFrom[$S], $date) : $date;
-						$runsTo[$S] = isset($runsTo[$S]) ? max($runsTo[$S], $date) : $date;
-					}
-				}
-			}
-
-			// save seasons
-			$db->begin();
-			$db->delete('seasons', array('series_id' => $this->id, 'edited' => 0));
+			Season::deleteAll(['series_id' => $this->id, 'edited' => 0]);
 			$overriddenSeasons = $db->select_fields('seasons', 'season, season', ['series_id' => $this->id, 'edited' => 1]);
-			foreach ( $seasons AS $S => $E ) {
-				if ( !isset($overriddenSeasons[$S]) && isset($runsFrom[$S], $runsTo[$S]) ) {
+			foreach ( $result->episodes AS $S => $season ) {
+				if ( !isset($overriddenSeasons[$S]) ) {
 					$db->insert('seasons', array(
 						'series_id' => $this->id,
 						'season' => $S,
-						'episodes' => $E,
-						'runs_from' => $runsFrom[$S],
-						'runs_to' => $runsTo[$S],
+						'episodes' => $season->episodes,
+						'runs_from' => $season->runs_from,
+						'runs_to' => $season->runs_to,
 					));
 				}
 			}
-			$db->commit();
+		});
 
-			return true;
-		}
+		return true;
 	}
 
 	public function getNextEpisodeSummary() {

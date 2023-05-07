@@ -45,8 +45,8 @@ function is_logged_in( $act = true ) {
 	return false;
 }
 
-function html($str) {
-	return htmlspecialchars($str, ENT_COMPAT, 'UTF-8');
+function html(?string $str) {
+	return htmlspecialchars($str ?? '', ENT_COMPAT, 'UTF-8');
 }
 
 function attributes($attrs, $except = array()) {

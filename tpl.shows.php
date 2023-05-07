@@ -34,19 +34,15 @@ foreach ( $series AS $n => $show ) {
 		}
 	}
 
-	$tvdbAction = 'link';
-	$banner = '';
-	if ( $show->tvdb_series_id ) {
-		$tvdbAction = 'update';
+	$tvdbAction = 'linkshow';
+	if ( $show->imdb_id ) {
+		$tvdbAction = 'updateshow';
 		$classes[] = 'with-tvdb';
+	}
 
-		if ( $cfg->banners ) {
-			if ( $data = @json_decode($show->data) ) {
-				if ( @$data->banner && is_string($data->banner) ) {
-					$banner = 'data-banner="' . html($data->banner) . '"';
-				}
-			}
-		}
+	$banner = '';
+	if ( $cfg->banners && $show->banner_url ) {
+		$banner = 'data-banner="' . html($show->banner_url) . '"';
 	}
 
 	$title = '';
@@ -58,7 +54,7 @@ foreach ( $series AS $n => $show ) {
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
-	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . 'show=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
+	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . '=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name show-banner"><span' . $title . ' class="show-name" id="show-name-' . $show->id . '">' . html($show->name) . '</span> <a class="edit-title" href="#" onclick="return changeValue(this.parentNode.parentNode.firstElementChild, ' . $show->id . ',\'name\', \'' . html(addslashes($show->name)) . '\');" title="Click to edit show name"><img src="pencil.png" /></a></td>' . "\n";
 	if ($cfg->banners) {
 		echo "\t" . '<td class="picture show-banner">' . ( $banner ? '<img src="picture.png" alt="banner" />' : '' ) . '</td>' . "\n";

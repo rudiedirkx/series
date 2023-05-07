@@ -1,0 +1,54 @@
+query GetTitle($titleId: ID!, $episodesCursor: ID = null) {
+	title(id: $titleId) {
+		id
+		titleText {
+			text
+		}
+		primaryImage {
+			url
+			width
+			height
+		}
+		plots(first: 1) {
+			edges {
+				node {
+					plotText {
+						plainText
+					}
+				}
+			}
+		}
+		releaseYear {
+			year
+			endYear
+		}
+		episodes {
+			episodes(first: 200, after: $episodesCursor) {
+				total
+				pageInfo {
+					hasNextPage
+				}
+				edges {
+					cursor
+					node {
+						id
+						canRate {
+							isRatable
+						}
+						releaseDate {
+							year
+							month
+							day
+						}
+						series {
+							episodeNumber {
+								episodeNumber
+								seasonNumber
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}

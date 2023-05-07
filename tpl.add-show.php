@@ -6,8 +6,8 @@
 
 	<fieldset style="display: inline-block">
 		<legend><?= @$linkingShow ? 'Link show' : 'Add show' ?></legend>
-		<p>Name: <input id="showname" type="search" name="name" value="<?= (string)@$_POST['name'] ?>" /></p>
-		<p>The TVDB id: <input id="add_tvdb_series_id" type="search" name="tvdb_series_id" value="<?= (string)@$_POST['tvdb_series_id'] ?>" /></p>
+		<p>Name: <input id="showname" type="search" name="name" value="<?= html($_POST['name'] ?? '') ?>" /></p>
+		<p>Remote ID: <input id="<?= $remote->field ?>" type="search" name="<?= $remote->field ?>" value="<?= html($_POST[$remote->field] ?? '') ?>" /></p>
 
 		<p>
 			<button name="_action" value="search" class="submit">Search</button>
@@ -15,9 +15,7 @@
 			<a href="seasons.php" style="float: right">seasons</a>
 		</p>
 
-		<?if (@$adding_show_tvdb_result):?>
-			<!-- <?php print_r($adding_show_tvdb_result) ?> -->
-
+		<?if (isset($remote->searchResults)):?>
 			<script>
 			window.on('load', function() {
 				scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
@@ -25,26 +23,35 @@
 			$$('.add-exists').removeClass('add-exists');
 			</script>
 
-			<?if (!is_scalar($adding_show_tvdb_result)):?>
-				<div class="search-results">
-					<ul>
-						<?foreach ($adding_show_tvdb_result->Series AS $show):
-							$exists = $db->select_one('series', 'id', ['tvdb_series_id' => $show->seriesid, 'user_id' => USER_ID]);
-							?>
-							<li class="<?= $exists ? 'exists' : '' ?>">
-								<a class="tvdb-search-result" title="<?= html($show->Overview) ?>" data-id="<?= $show->seriesid ?>" data-name="<?= html($show->SeriesName) ?>" href="#<?= $show->seriesid ?>"><?= html($show->SeriesName) ?></a>
-								(<?= ($fa = (string) $show->FirstAired) ? date('Y', strtotime($fa)) : '?' ?>)
-								<?if ($exists):?>
-									(<strong>you have this</strong>)
-									<script>$$('[data-showid="<?= $exists ?>"]', true).addClass('add-exists');</script>
-								<?endif?>
-								(<a target="_blank" href="http://www.thetvdb.com/?tab=series&id=<?= $show->seriesid ?>">=&gt;</a>)
-								<div class="tvdb-search-result-description"><?= html($show->Overview) ?></div>
-							</li>
-						<?endforeach?>
-					</ul>
-				</div>
-			<?endif?>
+			<div class="search-results">
+				<ul>
+					<?foreach ($remote->searchResults AS $result):
+						$exists = (int) $db->select_one('series', 'id', [$remote->field => $result->id, 'user_id' => USER_ID]);
+						?>
+						<li class="<?= $exists ? 'exists' : '' ?>">
+							<a
+								class="tvdb-search-result"
+								title="<?= html($result->plot) ?>"
+								data-id="<?= $result->id ?>"
+								data-name="<?= html($result->name) ?>"
+								href="#<?= $result->id ?>"
+							><?= html($result->name) ?></a>
+							(<?= $result->year ?>)
+							<?if ($exists):?>
+								(<strong>you have this</strong>)
+								<script>$$('[data-showid="<?= $exists ?>"]', true).addClass('add-exists');</script>
+							<?endif?>
+							(<a target="_blank" href="<?= $result->url ?>/">=&gt;</a>)
+							<div class="tvdb-search-result-description"><?= html($result->plot) ?></div>
+						</li>
+					<?endforeach?>
+				</ul>
+			</div>
+
+			<details>
+				<summary><?= count($db->queries) ?> queries</summary>
+				<ol><li><?= implode('</li><li>', $db->queries) ?></li></ol>
+			</details>
 		<?endif?>
 	</fieldset>
 </form>
@@ -88,6 +95,6 @@ $$('a.tvdb-search-result').on('click', function(e) {
 	var id = this.data('id'),
 		name = this.data('name');
 	$('showname').value = name;
-	$('add_tvdb_series_id').value = id;
+	$('imdb_id').value = id;
 });
 </script>
