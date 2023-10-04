@@ -41,7 +41,7 @@
 								(<strong>you have this</strong>)
 								<script>$$('[data-showid="<?= $exists ?>"]', true).addClass('add-exists');</script>
 							<?endif?>
-							(<a target="_blank" href="<?= $result->url ?>/">=&gt;</a>)
+							(<a target="_blank" href="<?= $result->url ?>">=&gt;</a>)
 							<div class="tvdb-search-result-description"><?= html($result->plot) ?></div>
 						</li>
 					<?endforeach?>
