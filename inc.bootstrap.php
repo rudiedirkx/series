@@ -19,7 +19,7 @@ elseif ( defined('HEROKU_PG_URI') && HEROKU_PG_URI ) {
 }
 // Local
 else {
-	$db = db_sqlite::open(array('database' => __DIR__ . '/db/series.sqlite3'));
+	$db = db_sqlite::open(array('database' => DB_FILE));
 }
 $db->ensureSchema(require 'inc.db-schema.php');
 
