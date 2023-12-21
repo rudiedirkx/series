@@ -1,0 +1,11 @@
+name: Deploy
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: rudiedirkx/deploy-git-action@v04
+        with:
+          privkey: ${{ secrets.PRIVKEY }}
+          host: ${{ secrets.SSH_HOST }}
+          path: ${{ secrets.SSH_TARGET_DIR }}
