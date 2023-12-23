@@ -187,7 +187,7 @@ elseif ( isset($_GET['id'], $_GET['active']) ) {
 // Delete show
 elseif ( isset($_GET['delete']) ) {
 	if ( $show = Show::find($_GET['delete']) ) {
-		$show->update(array('deleted' => 1));
+		$show->update(array('deleted' => 1, 'changed' => time()));
 	}
 
 	if ( AJAX ) {
@@ -200,7 +200,7 @@ elseif ( isset($_GET['delete']) ) {
 // Undelete show
 elseif ( isset($_GET['undelete']) ) {
 	if ( $show = Show::find($_GET['undelete']) ) {
-		$show->update(array('deleted' => 0));
+		$show->update(array('deleted' => 0, 'changed' => time()));
 
 		setcookie('series_hilited', $show->id);
 	}
@@ -221,24 +221,24 @@ elseif ( isset($_GET['watching']) ) {
 
 			// Unwatch
 			if ( $show->watching ) {
-				$show->update(array('watching' => 0));
+				$show->update(array('watching' => 0, 'changed' => time()));
 			}
 			// Watch
 			else {
 				$maxWatching = $db->select_one('series', 'MAX(watching)', array('user_id' => USER_ID));
-				$show->update(array('watching' => $maxWatching + 1, 'active' => 1));
+				$show->update(array('watching' => $maxWatching + 1, 'active' => 1, 'changed' => time()));
 
 				// Only allow $cfg->max_watching shows to have watching > 1
 				$allWatching = $db->select_fields('series', 'id, watching', 'watching > 0 AND user_id = ? ORDER BY watching DESC, id DESC', USER_ID);
 				$allWatching = array_keys($allWatching);
 				$illegallyWatching = array_slice($allWatching, $cfg->max_watching);
-				count($illegallyWatching) and $db->update('series', array('watching' => 0), array('id' => $illegallyWatching, 'user_id' => USER_ID));
+				count($illegallyWatching) and $db->update('series', array('watching' => 0, 'changed' => time()), array('id' => $illegallyWatching, 'user_id' => USER_ID));
 			}
 		}
 		// Only selected (no toggle, just ON)
 		else {
-			$db->update('series', array('watching' => 0), array('user_id' => USER_ID));
-			$show->update(array('watching' => 0));
+			$db->update('series', array('watching' => 0, 'changed' => time()), array('user_id' => USER_ID));
+			$show->update(array('watching' => 0, 'changed' => time()));
 		}
 
 		setcookie('series_hilited', $show->id);
