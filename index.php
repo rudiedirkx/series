@@ -1,15 +1,10 @@
 <?php
 
-use rdx\imdb\AuthSession;
-use rdx\imdb\Client;
-use rdx\series\RemoteImdb;
 use rdx\series\Show;
 
 require 'inc.bootstrap.php';
 
 is_logged_in(true);
-
-$remote = new RemoteImdb(new Client(new AuthSession(IMDB_AT_MAIN, IMDB_UBID_MAIN)));
 
 // Get and reset highlighted show
 $hilited = (int) ($_GET['series_hilited'] ?? $_COOKIE['series_hilited'] ?? 0);

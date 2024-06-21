@@ -33,7 +33,7 @@ if ( isset($_POST['cfg']) ) {
 $total = $db->count('series', '1=1');
 $active = $db->count('series', 'active = ?', array(1));
 $watching = $db->count('series', 'watching >= ?', array(1));
-$withTvdb = $db->count('series', "tvdb_series_id <> '0'");
+$withRemote = $db->count('series', "{$remote->field} <> '0'");
 $deleted = $db->count('series', 'deleted = ?', array(1));
 
 ?>
@@ -80,11 +80,11 @@ label { font-weight: bold; display: block; }
 		<td><?= $watching ?></td>
 	</tr>
 	<tr>
-		<th align="right">With TVDB ID</th>
+		<th align="right">With Remote ID</th>
 		<td>:</td>
-		<td><?= $withTvdb ?></td>
+		<td><?= $withRemote ?></td>
 		<td></td>
-		<td>(<?= round($withTvdb / $total * 100) ?> %, <?= $total - $withTvdb ?> without)</td>
+		<td>(<?= round($withRemote / $total * 100) ?> %, <?= $total - $withRemote ?> without)</td>
 	</tr>
 	<tr>
 		<th align="right">Deleted</th>

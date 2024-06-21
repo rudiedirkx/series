@@ -1,7 +1,10 @@
 <?php
 
+use rdx\imdb\AuthSession;
+use rdx\imdb\Client;
 use rdx\series\Config;
 use rdx\series\Model;
+use rdx\series\RemoteImdb;
 
 define('REQUEST_MICROTIME', microtime(1));
 
@@ -34,3 +37,5 @@ define('AJAX', strtolower($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') == 'xmlhttpre
 define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? ''), 'mobile')));
 
 $cfg = new Config;
+
+$remote = new RemoteImdb(new Client(new AuthSession(IMDB_AT_MAIN, IMDB_UBID_MAIN)));
