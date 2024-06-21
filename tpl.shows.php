@@ -59,7 +59,7 @@ foreach ( $series AS $n => $show ) {
 	if ($cfg->banners) {
 		echo "\t" . '<td class="picture show-banner">' . ( $banner ? '<img src="picture.png" alt="banner" />' : '' ) . '</td>' . "\n";
 	}
-	echo "\t" . '<td class="picture imdb">' . ( $show->imdb_id ? '<a href="https://www.imdb.com/title/' . $show->imdb_id . '/" target="_blank"><img src="imdb.png" alt="imdb" /></a>' : '' ) . '</td>' . "\n";
+	echo "\t" . '<td class="imdb">' . ( $show->imdb_id ? '<a href="https://www.imdb.com/title/' . $show->imdb_id . '/" target="_blank"><img src="imdb.png" alt="imdb" /></a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode ?? '') ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="info"><a href="#"><img src="information.png" alt="Info" /></a></td>' . "\n";
 	echo "\t" . '<td class="seasons">' . ( $show->seasons ? '<a title="Total episodes: ' . $show->total_episodes . " (" . $show->pretty_runs_from . " - " . $show->pretty_runs_to . ")\n\n" . 'Click to reset seasons/episodes list" href="?resetshow=' . $show->id . '" onclick="return confirm(\'Want to delete all tvdb data for this show?\');">' . $show->num_seasons . '</a>' : '' ) . '</td>' . "\n";
@@ -78,6 +78,5 @@ foreach ( $series AS $n => $show ) {
 	else {
 		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?undelete=' . $show->id . '" title="Click to unhide."><img src="delete.png" alt="UNDELETE" /></a></td>' . "\n";
 	}
-	echo "\t" . '<td class="icon download"><a href="?downloadtvdb=' . $show->id . '"><img src="disk.png" /></a></td>' . "\n";
 	echo '</tr>' . "\n\n\n\n\n\n";
 }

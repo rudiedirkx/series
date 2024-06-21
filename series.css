@@ -75,8 +75,7 @@ tr.filtered-out {
 }
 @media (max-width: 505px) {
 	.edit-title,
-	tr > .picture,
-	tr > .icon.download {
+	tr > .picture {
 		display: none;
 	}
 }
