@@ -7,6 +7,8 @@ foreach ( $series AS $n => $show ) {
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
 
+	$rating = $imdbRatings[$show->imdb_id] ?? null;
+
 	$hilite = $hilited == $show->id;
 	if ( $hilite ) {
 		$classes[] = 'hilited';
@@ -56,9 +58,7 @@ foreach ( $series AS $n => $show ) {
 	}
 	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . '=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name show-banner"><span' . $title . ' class="show-name" id="show-name-' . $show->id . '">' . html($show->name) . '</span> <a class="edit-title" href="#" onclick="return changeValue(this.parentNode.parentNode.firstElementChild, ' . $show->id . ',\'name\', \'' . html(addslashes($show->name)) . '\');" title="Click to edit show name"><img src="pencil.png" /></a></td>' . "\n";
-	if ($cfg->banners) {
-		echo "\t" . '<td class="picture show-banner">' . ( $banner ? '<img src="picture.png" alt="banner" />' : '' ) . '</td>' . "\n";
-	}
+	echo "\t" . '<td class="rating">' . ($rating?->rating ?? '') . '</td>' . "\n";
 	echo "\t" . '<td class="imdb">' . ( $show->imdb_id ? '<a href="https://www.imdb.com/title/' . $show->imdb_id . '/" target="_blank"><img src="imdb.png" alt="imdb" /></a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode ?? '') ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="info"><a href="#"><img src="information.png" alt="Info" /></a></td>' . "\n";

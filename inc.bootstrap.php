@@ -38,4 +38,5 @@ define('MOBILE', is_int(strpos(strtolower($_SERVER['HTTP_USER_AGENT'] ?? ''), 'm
 
 $cfg = new Config;
 
-$remote = new RemoteImdb(new Client(new AuthSession(IMDB_AT_MAIN, IMDB_UBID_MAIN)));
+$imdb = new Client(new AuthSession(IMDB_AT_MAIN, IMDB_UBID_MAIN));
+$remote = new RemoteImdb($imdb);

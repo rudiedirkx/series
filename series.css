@@ -26,6 +26,7 @@ td.next a { color: #888; }
 tr.hd th { padding: 4px; }
 tr.watching td { font-weight: bold; }
 tr.deleted td { opacity: 0.25; background: yellow; }
+.rating { text-align: right; }
 td.icon { padding-right: 2px; padding-left: 2px; }
 tr:not(.with-tvdb) .tvdb img { opacity: 0.3; }
 td:not(.move):not(.name) img { width: 16px; height: 16px; display: block; }
@@ -74,8 +75,7 @@ tr.filtered-out {
 	}
 }
 @media (max-width: 505px) {
-	.edit-title,
-	tr > .picture {
+	.edit-title {
 		display: none;
 	}
 }

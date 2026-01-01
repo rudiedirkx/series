@@ -324,6 +324,9 @@ $series = Show::all("
 ", [USER_ID, $hilited]);
 Show::eager('seasons', $series);
 
+$imdbIds = array_values(array_unique(array_filter(array_column($series, 'imdb_id'))));
+$imdbRatings = rand(0, 4) == 0 ? $imdb->getTitleRatings($imdbIds) : [];
+
 ?>
 <!doctype html>
 <html>
@@ -347,9 +350,7 @@ Show::eager('seasons', $series);
 		<tr class="hd" bgcolor="#bbbbbb">
 			<th class="tvdb"></th>
 			<th>Name</th>
-			<? if ($cfg->banners): ?>
-				<th class="picture"></th>
-			<? endif ?>
+			<th class="rating">★</th>
 			<th class="imdb"></th>
 			<th class="next">Nxt</th>
 			<th class="info"></th>
