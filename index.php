@@ -325,7 +325,7 @@ $series = Show::all("
 Show::eager('seasons', $series);
 
 $imdbIds = array_values(array_unique(array_filter(array_column($series, 'imdb_id'))));
-$imdbRatings = rand(0, 4) == 0 ? $imdb->getTitleRatings($imdbIds) : [];
+$imdbRatings = rand(1, LIVE_IMDB_RATINGS_ODDS) == 1 ? $imdb->getTitleRatings($imdbIds) : [];
 
 ?>
 <!doctype html>
