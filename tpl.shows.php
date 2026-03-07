@@ -56,7 +56,7 @@ foreach ( $series AS $n => $show ) {
 	if ($cfg->sortable) {
 		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
 	}
-	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . '=' . $show->id . '" title="Click to (connect to TVDB and) download meta information"><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
+	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . '=' . $show->id . '" title="Click to connect/sync. Created @ ' . date('Y-m-d', $show->created) . '. Last any update @ ' . date('Y-m-d H:i', $show->changed) . '."><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name show-banner"><span' . $title . ' class="show-name" id="show-name-' . $show->id . '">' . html($show->name) . '</span> <a class="edit-title" href="#" onclick="return changeValue(this.parentNode.parentNode.firstElementChild, ' . $show->id . ',\'name\', \'' . html(addslashes($show->name)) . '\');" title="Click to edit show name"><img src="pencil.png" /></a></td>' . "\n";
 	echo "\t" . '<td class="rating">' . ($rating?->rating ?? '') . '</td>' . "\n";
 	echo "\t" . '<td class="imdb">' . ( $show->imdb_id ? '<a href="https://www.imdb.com/title/' . $show->imdb_id . '/" target="_blank"><img src="imdb.png" alt="imdb" /></a>' : '' ) . '</td>' . "\n";
