@@ -7,7 +7,7 @@ foreach ( $series AS $n => $show ) {
 	$show->active && $classes[] = 'active';
 	$show->watching && $classes[] = 'watching';
 
-	$rating = $imdbRatings[$show->imdb_id] ?? null;
+	$imdbTitle = $imdbRatings[$show->imdb_id] ?? null;
 
 	$hilite = $hilited == $show->id;
 	if ( $hilite ) {
@@ -66,7 +66,7 @@ foreach ( $series AS $n => $show ) {
 	}
 	echo '<a class="edit-title" href="#" onclick="return changeValue(this.parentNode.parentNode.firstElementChild, ' . $show->id . ',\'name\', \'' . html(addslashes($show->name)) . '\');" title="Click to edit show name"><img src="pencil.png" /></a>';
 	echo '</td>' . "\n";
-	echo "\t" . '<td class="rating">' . ($rating?->rating ?? '') . '</td>' . "\n";
+	echo "\t" . '<td class="rating" title="' . ($imdbTitle ? $imdbTitle->rating . ' (' . number_format($imdbTitle->ratings, 0, '', '_') . ')' : '') . '">' . $imdbTitle?->userRating->rating . '</td>' . "\n";
 	echo "\t" . '<td class="imdb">' . ( $show->imdb_id ? '<a href="https://www.imdb.com/title/' . $show->imdb_id . '/" target="_blank"><img src="imdb.png" alt="imdb" /></a>' : '' ) . '</td>' . "\n";
 	echo "\t" . '<td class="next oc"><a' . $thisSeasonsEpisodes . ' href="#" onclick="return changeValue(this, ' . $show->id . ', \'next_episode\');">' . ( trim($show->next_episode ?? '') ? str_replace(' ', '&nbsp;', $show->next_episode) : '&nbsp;' ) . '</a></td>' . "\n";
 	echo "\t" . '<td class="info"><a href="#"><img src="information.png" alt="Info" /></a></td>' . "\n";
