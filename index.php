@@ -419,7 +419,7 @@ function doAndRespond(o, d) {
 	var id = '[' + ++timer + '] Some Ajax';
 	console.time && console.time(id)
 
-	o.setHTML('<img src="spinner.gif" />');
+	o.setHTML('<img src="spinner.gif" style="margin: 0 auto" />');
 	$.post('', d).on('done', function(e, rsp) {
 		if ( typeof rsp == 'string' ) {
 			return o.setHTML(rsp);
@@ -500,6 +500,7 @@ $('series')
 		else if ( up || down ) {
 			if ( this.hasClass('eligible') ) {
 				e.preventDefault();
+				this.style.minWidth = getComputedStyle(this).width;
 				var direction = up ? 1 : -1;
 				doAndRespond(this, 'id=' + this.ancestor('tr').data('showid') + '&dir=' + direction);
 			}
@@ -514,6 +515,7 @@ $('series')
 	.on('wheel', '.next.oc a', function(e) {
 		if ( this.hasClass('eligible') ) {
 			e.preventDefault();
+			this.style.minWidth = getComputedStyle(this).width;
 			var direction = e.originalEvent.deltaY > 0 ? -1 : 1;
 			doAndRespond(this, 'id=' + this.ancestor('tr').data('showid') + '&dir=' + direction);
 		}
