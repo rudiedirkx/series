@@ -1,24 +1,24 @@
 
 <form id="add-show" method="post" action>
-	<? if (@$linkingShow): ?>
+	<? if (isset($linkingShow)): ?>
 		<input type="hidden" name="id" value="<?= $linkingShow->id ?>" />
 	<? endif ?>
 
 	<fieldset style="display: inline-block">
-		<legend><?= @$linkingShow ? 'Link show' : 'Add show' ?></legend>
+		<legend><?= isset($linkingShow) ? 'Link show' : 'Add show' ?></legend>
 		<p>Name: <input id="showname" type="search" name="name" value="<?= html($_POST['name'] ?? '') ?>" /></p>
-		<p>Remote ID: <input id="<?= $remote->field ?>" type="search" name="<?= $remote->field ?>" value="<?= html($_POST[$remote->field] ?? '') ?>" /></p>
+		<p>Remote ID: <input id="<?= remote()->field ?>" type="search" name="<?= remote()->field ?>" value="<?= html($_POST[remote()->field] ?? '') ?>" /></p>
 
 		<p>
 			<button name="_action" value="search" class="submit">Search</button>
 			<button name="_action" value="save">Save</button>
 			<span style="float: right">
 				<a href="seasons.php">seasons</a>
-				<a href="config.php">config</a>
+				<a href="stats.php">stats</a>
 			</span>
 		</p>
 
-		<?if (isset($remote->searchResults)):?>
+		<?if (isset(remote()->searchResults)):?>
 			<script>
 			window.on('load', function() {
 				scrollTo(0, document.body.scrollHeight || document.documentElement.scrollHeight);
@@ -28,8 +28,8 @@
 
 			<div class="search-results">
 				<ul>
-					<?foreach ($remote->searchResults AS $result):
-						$exists = (int) $db->select_one('series', 'id', [$remote->field => $result->id, 'user_id' => USER_ID]);
+					<?foreach (remote()->searchResults AS $result):
+						$exists = (int) db()->select_one('series', 'id', [remote()->field => $result->id, 'user_id' => USER_ID]);
 						?>
 						<li class="<?= $exists ? 'exists' : '' ?>">
 							<a
@@ -52,8 +52,8 @@
 			</div>
 
 			<details>
-				<summary><?= count($db->queries) ?> queries</summary>
-				<ol><li><?= implode('</li><li>', $db->queries) ?></li></ol>
+				<summary><?= count(db()->queries) ?> queries</summary>
+				<ol><li><?= implode('</li><li>', db()->queries) ?></li></ol>
 			</details>
 		<?endif?>
 	</fieldset>

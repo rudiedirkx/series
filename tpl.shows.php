@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @var array<int, Show> $series
+ * @var int $hilited
+ */
 use rdx\series\Show;
 
 foreach ( $series AS $n => $show ) {
@@ -45,7 +49,7 @@ foreach ( $series AS $n => $show ) {
 	}
 
 	$banner = '';
-	if ( $cfg->banners && $show->banner_url ) {
+	if ( $show->banner_url ) {
 		$banner = 'data-banner="' . html($show->banner_url) . '"';
 	}
 
@@ -54,11 +58,11 @@ foreach ( $series AS $n => $show ) {
 		$title = ' title="' . html($show->description) . '"';
 	}
 
+	$created = $show->created ? date('Y-m-d', $show->created) : 'unknown';
+	$changed = $show->changed ? date('Y-m-d H:i', $show->changed) : 'unknown';
+
 	echo '<tr class="' . implode(' ', $classes) . '" data-showid="' . $show->id . '"' . $banner . '>' . "\n";
-	if ($cfg->sortable) {
-		echo "\t" . '<td class="move"><img src="move.png" alt="Move" /></td>' . "\n";
-	}
-	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . '=' . $show->id . '" title="Click to connect/sync. Created @ ' . date('Y-m-d', $show->created) . '. Last any update @ ' . date('Y-m-d H:i', $show->changed) . '."><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
+	echo "\t" . '<td class="tvdb"><a class="' . $tvdbAction . '" href="?' . $tvdbAction . '=' . $show->id . '" title="Click to connect/sync. Created @ ' . $created . '. Last any update @ ' . $changed . '."><img src="tvdb.png" alt="TVDB" /></a></td>' . "\n";
 	echo "\t" . '<td class="name show-banner">';
 	echo '<span' . $title . ' class="show-name" id="show-name-' . $show->id . '">' . html($show->name) . '</span> ';
 	if ($year) {
@@ -78,7 +82,7 @@ foreach ( $series AS $n => $show ) {
 		echo "\t" . '<td class="icon active"></td>' . "\n";
 	}
 	if ( $show->active ) {
-		echo "\t" . '<td class="icon watching">' . ( !$show->watching || $cfg->max_watching > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . $cfg->max_watching . '"><img src="' . ($show->watching ? 'arrow_down' : 'arrow_up') . '.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
+		echo "\t" . '<td class="icon watching">' . ( !$show->watching || MAX_WATCHING > 1 ? '<a href="?watching=' . $show->id . '" title="Click to highlight currently watching. Max ' . MAX_WATCHING . '"><img src="' . ($show->watching ? 'arrow_down' : 'arrow_up') . '.png" alt="ARROW" /></a>' : '' ) . '</td>' . "\n";
 	}
 	elseif ( !$show->deleted ) {
 		echo "\t" . '<td class="icon watching"><a class="ajaxify" href="?delete=' . $show->id . '" title="Click to visually hide."><img src="delete.png" alt="DELETE" /></a></td>' . "\n";

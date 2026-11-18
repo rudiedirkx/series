@@ -24,16 +24,15 @@ if ( isset($_POST['add_season']) ) {
 if ( isset($_POST['episodes']) ) {
 	header('Content-type: text/plain; charset=utf-8');
 
-	$db->begin();
+	db()->begin();
 	foreach ( $_POST['episodes'] as $sid => $seasons ) {
 		foreach ( $seasons as $season => $eps ) {
-			$db->update('seasons', ['episodes' => $eps, 'edited' => 1], ['series_id' => $sid, 'season' => $season]);
+			db()->update('seasons', ['episodes' => $eps, 'edited' => 1], ['series_id' => $sid, 'season' => $season]);
 		}
 	}
-	$db->commit();
+	db()->commit();
 
 	do_redirect('seasons');
-	exit;
 }
 
 $series = Show::all("1=1 ORDER BY LOWER(IF('the ' = LOWER(substr(name, 1, 4)), SUBSTR(name, 5), name)) ASC");
@@ -108,6 +107,6 @@ function addSeason(a) {
 </script>
 
 <details>
-	<summary><?= count($db->queries) ?> queries</summary>
-	<ol><li><?= implode('</li><li>', $db->queries) ?></li></ol>
+	<summary><?= count(db()->queries) ?> queries</summary>
+	<ol><li><?= implode('</li><li>', db()->queries) ?></li></ol>
 </details>

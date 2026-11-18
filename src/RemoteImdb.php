@@ -9,6 +9,9 @@ class RemoteImdb {
 
 	public string $field = 'imdb_id';
 
+	/**
+	 * @var ?list<SearchResult>
+	 */
 	public ?array $searchResults = null;
 
 	public function __construct(
@@ -19,12 +22,15 @@ class RemoteImdb {
 		$this->imdb->logIn();
 	}
 
+	/**
+	 * @return list<SearchResult>
+	 */
 	public function search(string $query) : array {
 		$titles = $this->imdb->searchGraphql($query, ['types' => ['TITLE']]);
 
 		$results = [];
 		foreach ($titles as $title) {
-			if ($title->type == Title::TYPE_SERIES) {
+			if ($title instanceof Title && $title->type == Title::TYPE_SERIES) {
 				$results[] = new SearchResult($title->id, $title->name,
 					year: $title->year,
 					url: sprintf('https://www.imdb.com/title/%s/', $title->id),
@@ -40,7 +46,8 @@ class RemoteImdb {
 		$data = $this->imdb->graphqlData(file_get_contents(__DIR__ . '/title.graphql'), [
 			'titleId' => $id,
 		]);
-		$title = $data['data']['title'];
+		$title = $data['data']['title'] ?? null;
+		if (!$title) return null;
 
 		$id = $title['id'];
 		$name = $title['titleText']['text'] ?? null;
@@ -57,6 +64,10 @@ class RemoteImdb {
 		);
 	}
 
+	/**
+	 * @param AssocArray $episodes
+	 * @return array<int, Season>
+	 */
 	protected function fetchAllEpisodes(string $id, array $episodes) : array {
 		$edges = $episodes['edges'] ?? [];
 		if (!count($edges)) return [];
@@ -79,6 +90,10 @@ class RemoteImdb {
 		return $this->unpackEpisodes($edges);
 	}
 
+	/**
+	 * @param list<AssocArray> $episodes
+	 * @return array<int, Season>
+	 */
 	protected function unpackEpisodes(array $episodes) : array {
 		$dates = [];
 		foreach ($episodes as $episode) {

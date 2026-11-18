@@ -1,7 +1,7 @@
 
 <tbody id="tb-search">
 	<tr>
-		<td colspan="<?= $cfg->banners ? 8 : 7 ?>">
+		<td colspan="8">
 			<input
 				id="search"
 				type="search"

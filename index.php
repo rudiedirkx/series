@@ -14,21 +14,16 @@ if ( isset($_COOKIE['series_hilited']) ) {
 
 
 
-$async = MOBILE && $cfg->async_inactive;
-$skip = $cfg->dont_load_inactive;
-
-
-
 // Link a show to TVDB, pt II
-if ( isset($_POST['id'], $_POST['name'], $_POST[$remote->field], $_POST['_action']) && $_POST['_action'] == 'save' ) {
+if ( isset($_POST['id'], $_POST['name'], $_POST[remote()->field], $_POST['_action']) && $_POST['_action'] == 'save' ) {
 	if ( $show = Show::find($_POST['id']) ) {
 		$show->update(array(
 			'name' => $_POST['name'],
-			$remote->field => $_POST[$remote->field] ?: 0,
+			remote()->field => $_POST[remote()->field],
 			'changed' => time(),
 		));
 
-		if ( $_POST[$remote->field] ) {
+		if ( $_POST[remote()->field] ) {
 			$show->updateRemote();
 		}
 	}
@@ -37,7 +32,7 @@ if ( isset($_POST['id'], $_POST['name'], $_POST[$remote->field], $_POST['_action
 }
 
 // New show
-elseif ( isset($_POST['name'], $_POST[$remote->field]) ) {
+elseif ( isset($_POST['name'], $_POST[remote()->field]) ) {
 	$action = @$_POST['_action'] ?: 'search';
 
 	$name = trim($_POST['name']);
@@ -51,8 +46,8 @@ elseif ( isset($_POST['name'], $_POST[$remote->field]) ) {
 
 	// Search
 	if ( $action == 'search' ) {
-		$remote->init();
-		$remote->search($name);
+		remote()->init();
+		remote()->search($name);
 		require 'tpl.add-show.php';
 		exit;
 	}
@@ -61,7 +56,7 @@ elseif ( isset($_POST['name'], $_POST[$remote->field]) ) {
 	$show = Show::create([
 		'user_id' => USER_ID,
 		'name' => $name,
-		$remote->field => $_POST[$remote->field] ?? null,
+		remote()->field => $_POST[remote()->field],
 		'deleted' => 0,
 		'active' => 1,
 		'watching' => 0,
@@ -107,10 +102,10 @@ elseif ( isset($_POST['id'], $_POST['dir']) ) {
 				}
 
 				// Add "0" padding
-				$E = str_pad($E, 2, '0', STR_PAD_LEFT);
+				$E = sprintf('%02d', $E);
 
 				// More detailed feedback
-				$season = $db->select('seasons', array('series_id' => $show->id, 'season' => $S))->first();
+				$season = db()->select_first('seasons', array('series_id' => $show->id, 'season' => $S));
 				$episodes = $season ? $season->episodes : 0;
 
 				$season_from = $season_to = '';
@@ -127,7 +122,7 @@ elseif ( isset($_POST['id'], $_POST['dir']) ) {
 			// respond
 			header('Content-type: text/json');
 			exit(json_encode($show->getNextEpisodeSummary() + array(
-				'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
+				'runtime' => round((microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) * 1000, 3),
 			)));
 		}
 	}
@@ -145,7 +140,7 @@ elseif ( isset($_POST['id'], $_POST['next_episode']) ) {
 
 		header('Content-type: text/json');
 		exit(json_encode($show->getNextEpisodeSummary() + array(
-			'runtime' => round((microtime(1) - REQUEST_MICROTIME) * 1000, 3),
+			'runtime' => round((microtime(true) - $_SERVER['REQUEST_TIME_FLOAT']) * 1000, 3),
 		)));
 	}
 
@@ -173,10 +168,10 @@ elseif ( isset($_GET['id'], $_GET['active']) ) {
 
 		$show->update($update);
 
-		setcookie('series_hilited', $show->id);
+		setcookie('series_hilited', (string) $show->id);
 	}
 
-	return do_redirect('index');
+	do_redirect('index');
 }
 
 // Delete show
@@ -189,7 +184,7 @@ elseif ( isset($_GET['delete']) ) {
 		exit('OK');
 	}
 
-	return do_redirect('index');
+	do_redirect('index');
 }
 
 // Undelete show
@@ -197,14 +192,14 @@ elseif ( isset($_GET['undelete']) ) {
 	if ( $show = Show::find($_GET['undelete']) ) {
 		$show->update(array('deleted' => 0, 'changed' => time()));
 
-		setcookie('series_hilited', $show->id);
+		setcookie('series_hilited', (string) $show->id);
 	}
 
 	if ( AJAX ) {
 		exit('OK');
 	}
 
-	return do_redirect('index');
+	do_redirect('index');
 }
 
 // Set current/watching show
@@ -212,7 +207,7 @@ elseif ( isset($_GET['watching']) ) {
 	if ( $show = Show::find($_GET['watching']) ) {
 
 		// Toggle selected
-		if ( $cfg->max_watching > 1 ) {
+		if ( MAX_WATCHING > 1 ) {
 
 			// Unwatch
 			if ( $show->watching ) {
@@ -220,26 +215,28 @@ elseif ( isset($_GET['watching']) ) {
 			}
 			// Watch
 			else {
-				$maxWatching = $db->select_one('series', 'MAX(watching)', array('user_id' => USER_ID));
+				$maxWatching = db()->select_one('series', 'MAX(watching)', array('user_id' => USER_ID));
 				$show->update(array('watching' => $maxWatching + 1, 'active' => 1, 'changed' => time()));
 
-				// Only allow $cfg->max_watching shows to have watching > 1
-				$allWatching = $db->select_fields('series', 'id, watching', 'watching > 0 AND user_id = ? ORDER BY watching DESC, id DESC', USER_ID);
+				// Only allow MAX_WATCHING shows to have watching > 1
+				$allWatching = db()->select_fields('series', 'id, watching', 'watching > 0 AND user_id = ? ORDER BY watching DESC, id DESC', [USER_ID]);
 				$allWatching = array_keys($allWatching);
-				$illegallyWatching = array_slice($allWatching, $cfg->max_watching);
-				count($illegallyWatching) and $db->update('series', array('watching' => 0, 'changed' => time()), array('id' => $illegallyWatching, 'user_id' => USER_ID));
+				$illegallyWatching = array_slice($allWatching, MAX_WATCHING);
+				if (count($illegallyWatching)) {
+					db()->update('series', array('watching' => 0, 'changed' => time()), array('id' => $illegallyWatching, 'user_id' => USER_ID));
+				}
 			}
 		}
 		// Only selected (no toggle, just ON)
 		else {
-			$db->update('series', array('watching' => 0, 'changed' => time()), array('user_id' => USER_ID));
+			db()->update('series', array('watching' => 0, 'changed' => time()), array('user_id' => USER_ID));
 			$show->update(array('watching' => 0, 'changed' => time()));
 		}
 
-		setcookie('series_hilited', $show->id);
+		setcookie('series_hilited', (string) $show->id);
 	}
 
-	return do_redirect('index');
+	do_redirect('index');
 }
 
 // Link a show to TVDB, pt I
@@ -247,11 +244,11 @@ elseif ( isset($_GET['linkshow']) ) {
 	$id = (int)$_GET['linkshow'];
 
 	if ( $linkingShow = Show::find($id) ) {
-		if ( !$linkingShow->{$remote->field} ) {
+		if ( !$linkingShow->{remote()->field} ) {
 			$name = $_POST['name'] = $linkingShow->name;
 
-			$remote->init();
-			$remote->search($name);
+			remote()->init();
+			remote()->search($name);
 			require 'tpl.add-show.php';
 			exit;
 		}
@@ -269,7 +266,7 @@ elseif ( isset($_GET['updateshow']) ) {
 		$success = $show->updateRemote();
 		if ( $success === true ) {
 			$rsp = 'OK';
-			setcookie('series_hilited', $id);
+			setcookie('series_hilited', (string) $id);
 		}
 		elseif ( $success === false ) {
 			$rsp = 'Something failed. TVDB gone?';
@@ -280,28 +277,28 @@ elseif ( isset($_GET['updateshow']) ) {
 		exit($rsp);
 	}
 
-	return do_redirect('index');
+	do_redirect('index');
 }
 
 // reset one show
 elseif ( isset($_GET['resetshow']) ) {
 	if ( $show = Show::find($_GET['resetshow']) ) {
 		// delete seasons/episodes
-		$db->delete('seasons', ['series_id' => $show->id]);
+		db()->delete('seasons', ['series_id' => $show->id]);
 
 		$show->update([
-			$remote->field => null,
+			remote()->field => null,
 			'changed' => time(),
 		]);
 	}
 
-	return do_redirect('index');
+	do_redirect('index');
 }
 
 // keep db hot
 elseif ( isset($_GET['keepalive']) ) {
-	$db->delete('variables', array('name' => 'keepalive'));
-	$db->insert('variables', array('name' => 'keepalive', 'value' => time()));
+	db()->delete('variables', array('name' => 'keepalive'));
+	db()->insert('variables', array('name' => 'keepalive', 'value' => time()));
 	exit('OK');
 }
 
@@ -325,7 +322,7 @@ $series = Show::all("
 Show::eager('seasons', $series);
 
 $imdbIds = array_values(array_unique(array_filter(array_column($series, 'imdb_id'))));
-$imdbRatings = LIVE_IMDB_RATINGS_ODDS > 0 && rand(1, LIVE_IMDB_RATINGS_ODDS) == 1 ? $imdb->getTitleRatings($imdbIds) : [];
+$imdbRatings = LIVE_IMDB_RATINGS_ODDS > 0 && rand(1, LIVE_IMDB_RATINGS_ODDS) == 1 ? imdb()->getTitleRatings($imdbIds) : [];
 
 ?>
 <!doctype html>
@@ -570,8 +567,8 @@ $('series')
 </script>
 
 <details>
-	<summary><?= count($db->queries) ?> queries</summary>
-	<ol><li><?= implode('</li><li>', $db->queries) ?></li></ol>
+	<summary><?= count(db()->queries) ?> queries</summary>
+	<ol><li><?= implode('</li><li>', db()->queries) ?></li></ol>
 </details>
 
 </body>

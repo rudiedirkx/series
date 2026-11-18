@@ -4,8 +4,6 @@ require 'inc.bootstrap.php';
 
 if ( is_logged_in(false) ) {
 	do_redirect('index');
-	echo "You're already logged in....";
-	exit;
 }
 
 if ( isset($_POST['user'], $_POST['pass']) ) {
@@ -18,9 +16,7 @@ if ( isset($_POST['user'], $_POST['pass']) ) {
 	}
 
 	$args = array($_POST['user'], ':', $_POST['pass']);
-	$user = $db
-		->select('users', 'email = ? AND password = SHA1(CONCAT(id, ?, ?))', $args)
-		->first();
+	$user = db()->select_first('users', 'email = ? AND password = SHA1(CONCAT(id, ?, ?))', $args);
 
 	if ( $user ) {
 		@session_start();
@@ -29,7 +25,6 @@ if ( isset($_POST['user'], $_POST['pass']) ) {
 		$_SESSION['series']['salt'] = rand();
 
 		do_redirect('index');
-		exit;
 	}
 
 	echo 'Invalid credentials.';

@@ -4,6 +4,9 @@ namespace rdx\series;
 
 class SearchResult {
 
+	/**
+	 * @param ?array<int, Season> $episodes
+	 */
 	public function __construct(
 		public string $id,
 		public string $name,

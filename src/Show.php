@@ -2,13 +2,16 @@
 
 namespace rdx\series;
 
-use ZipArchive;
-
 class Show extends UserModel {
 
 	static public $_table = 'series';
 
-	protected function get_current_season() {
+	static public function presave( array &$data ) : void {
+		parent::presave($data);
+		static::presaveNull($data, ['imdb_id']);
+	}
+
+	protected function get_current_season() : int {
 		return (int)$this->next_episode;
 	}
 
@@ -16,33 +19,37 @@ class Show extends UserModel {
 		return $this->to_many(Season::class, 'series_id')->order('season ASC')->key('season');
 	}
 
-	protected function get_first_season() {
+	protected function get_first_season() : ?Season {
 		return array_reduce($this->seasons, function($first, $season) {
 			return !$first || $season->runs_from < $first->runs_from ? $season : $first;
 		});
 	}
 
-	protected function get_last_season() {
+	protected function get_last_season() : ?Season {
 		return array_reduce($this->seasons, function($last, $season) {
 			return !$last || $season->runs_from > $last->runs_from ? $season : $last;
 		});
 	}
 
-	protected function get_runs_from() {
+	protected function get_runs_from() : ?string {
 		if ( $this->seasons ) {
 			$season = $this->first_season;
 			return $season->runs_from ?: null;
 		}
+
+		return null;
 	}
 
-	protected function get_runs_to() {
+	protected function get_runs_to() : ?string {
 		if ( $this->seasons ) {
 			$season = $this->last_season;
 			return $season->runs_to ?: null;
 		}
+
+		return null;
 	}
 
-	protected function get_pretty_runs_from() {
+	protected function get_pretty_runs_from() : string {
 		if ( $this->runs_from ) {
 			return date('M Y', strtotime($this->runs_from));
 		}
@@ -50,7 +57,7 @@ class Show extends UserModel {
 		return '?';
 	}
 
-	protected function get_pretty_runs_to() {
+	protected function get_pretty_runs_to() : string {
 		if ( $this->runs_to ) {
 			return date('M Y', strtotime($this->runs_to));
 		}
@@ -58,12 +65,12 @@ class Show extends UserModel {
 		return '?';
 	}
 
-	protected function get_season() {
+	protected function get_season() : ?Season {
 		$seasons = $this->seasons; // Don't error suppress, because of __get magic
 		return @$seasons[$this->current_season]; // No magic here, so do error suppress
 	}
 
-	protected function get_total_episodes() {
+	protected function get_total_episodes() : int {
 		$episodes = 0;
 		foreach ( $this->seasons as $season ) {
 			$episodes += $season->episodes;
@@ -71,7 +78,7 @@ class Show extends UserModel {
 		return $episodes;
 	}
 
-	protected function get_num_seasons() {
+	protected function get_num_seasons() : int {
 		return count($this->seasons);
 	}
 
@@ -80,14 +87,19 @@ class Show extends UserModel {
 	}
 
 	public function updateImdb() : bool {
-		$result = $GLOBALS['remote']->getInfo($this->imdb_id);
+		$result = remote()->getInfo($this->imdb_id);
 		if (!$result) return false;
 
+		$this->saveImdb($result);
+
+		return true;
+	}
+
+	public function saveImdb(SearchResult $result) : void {
 		self::$_db->transaction(function($db) use ($result) {
 			$this->update([
 				'description' => $result->plot,
 				'banner_url' => $result->banner,
-				'changed' => time(),
 			]);
 
 			Season::deleteAll(['series_id' => $this->id, 'edited' => 0]);
@@ -104,16 +116,15 @@ class Show extends UserModel {
 				}
 			}
 		});
-
-		return true;
 	}
 
-	public function getNextEpisodeSummary() {
-		global $db;
-
+	/**
+	 * @return AssocArray
+	 */
+	public function getNextEpisodeSummary() : array {
 		$parts = array_map('intval', explode('.', $this->next_episode));
 		if ( count($parts) == 2 ) {
-			$season = $db->select('seasons', array('series_id' => $this->id, 'season' => $parts[0]))->first();
+			$season = db()->select_first('seasons', array('series_id' => $this->id, 'season' => $parts[0]));
 			$episodes = $season ? $season->episodes : 0;
 
 			$season_from = $season_to = '';

@@ -1,0 +1,34 @@
+includes:
+	- vendor/rdx/db/extension.neon
+	- phpstan-baseline.neon
+parameters:
+	level: 6
+	bootstrapFiles:
+		- phpstan.php
+	typeAliases:
+		AssocArray: 'array<string, mixed>'
+	paths:
+		- ./
+		# - src/
+	excludePaths:
+		- vendor/
+	dynamicConstantNames:
+		- AJAX
+		- DB_FILE
+		- HEROKU_PG_URI
+		- IMDB_AT_MAIN
+		- IMDB_UBID_MAIN
+		- LIVE_IMDB_RATINGS_ODDS
+		- MAX_WATCHING
+		- USER_ID
+	rdx_dbfw:
+		aroPropertiesSchemaFile: 'inc.db-schema.php'
+	treatPhpDocTypesAsCertain: false
+	checkFunctionNameCase: true
+	checkNullables: true
+	# checkExplicitMixed: true
+	# checkImplicitMixed: true
+	reportMaybes: true
+	reportUnmatchedIgnoredErrors: true
+	ignoreErrors:
+		- message: "#^Method .+::relate_\\w+\\(\\) has no return type specified#"

@@ -12,7 +12,7 @@ abstract class UserModel extends Model {
 
 
 
-	static function count( $conditions, array $params = array() ) {
+	static function count( $conditions, array $params = array() ) : int {
 		self::_extendUserConditions($conditions, $params);
 		return parent::count($conditions, $params);
 	}
@@ -22,14 +22,18 @@ abstract class UserModel extends Model {
 		return parent::first($conditions, $params);
 	}
 
-	static function all( $conditions, array $params = [], array $options = [] ) {
+	static function all( $conditions, array $params = [] ) {
 		self::_extendUserConditions($conditions, $params);
-		return parent::all($conditions, $params, $options);
+		return parent::all($conditions, $params);
 	}
 
 
 
-	static protected function _extendUserConditions( &$conditions, array &$params ) {
+	/**
+	 * @param string|array<int|string, mixed> $conditions
+	 * @param list<mixed> $params
+	 */
+	static protected function _extendUserConditions( string|array &$conditions, array &$params ) : void {
 		if ( is_array($conditions) ) {
 			$conditions['user_id'] = USER_ID;
 		}
