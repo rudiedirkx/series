@@ -44,7 +44,9 @@ foreach ($shows as $i => $show) {
 			$postSeasons = array_keys($result->episodes);
 			$newSeasons = array_diff($postSeasons, $preSeasons);
 			if (count($newSeasons) > 0) {
-				echo " - (nxt $show->next_episode) New seasons: " . implode(', ', $newSeasons);
+				$newestSeason = $result->episodes[max($newSeasons)];
+				$newestYear = (int) $newestSeason->runs_from ?: '?';
+				echo " - (nxt $show->next_episode) New seasons: " . implode(', ', $newSeasons) . " ($newestYear)";
 				$newData++;
 			}
 
